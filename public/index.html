@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- =============== LANDING =============== -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-bg"></div>
+  <div class="landing-content">
+    <div class="logo">
+      <div class="logo-mtv">MTV</div>
+      <div class="logo-title">THE CHALLENGE</div>
+      <div class="logo-sub">SOCIAL EDITION</div>
+    </div>
+    <div class="landing-card">
+      <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
+      <div class="landing-buttons">
+        <button class="btn btn-primary" id="btn-create">CREATE GAME</button>
+        <div class="or-divider">— OR —</div>
+        <div class="join-row">
+          <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
+          <button class="btn btn-secondary" id="btn-join">JOIN</button>
+        </div>
+      </div>
+      <div id="landing-error" class="error-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== LOBBY =============== -->
+<div id="screen-lobby" class="screen">
+  <div class="lobby-header">
+    <div class="logo-small">⚡ THE CHALLENGE</div>
+    <div class="room-code-display">
+      <span class="code-label">ROOM CODE</span>
+      <span id="lobby-code" class="code-value"></span>
+      <button class="btn-copy" id="btn-copy-code" title="Copy code">📋</button>
+    </div>
+  </div>
+  <div class="lobby-body">
+    <div class="players-grid" id="lobby-players"></div>
+    <div class="lobby-footer">
+      <div id="lobby-status" class="lobby-status"></div>
+      <button class="btn btn-primary btn-xl" id="btn-start" style="display:none">START THE CHALLENGE</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============== DAILY INTRO =============== -->
+<div id="screen-daily-intro" class="screen">
+  <div class="phase-overlay">
+    <div class="phase-badge">ROUND <span id="di-round"></span></div>
+    <div class="phase-title">TODAY'S CHALLENGE</div>
+    <div class="phase-puzzle-name" id="di-puzzle-name"></div>
+    <div class="phase-sub">ALL <span id="di-count"></span> PLAYERS COMPETE</div>
+    <div class="countdown-big" id="di-countdown"></div>
+  </div>
+</div>
+
+<!-- =============== DAILY CHALLENGE =============== -->
+<div id="screen-daily" class="screen">
+  <div class="game-topbar">
+    <div class="topbar-left">
+      <span class="round-badge">RD <span id="daily-round"></span></span>
+      <span class="puzzle-label" id="daily-puzzle-label"></span>
+    </div>
+    <div class="topbar-right">
+      <div class="timer-ring">
+        <span class="timer-val" id="daily-timer">90</span>
+      </div>
+      <div class="progress-txt" id="daily-progress"></div>
+    </div>
+  </div>
+  <div id="puzzle-area" class="puzzle-area"></div>
+  <div id="puzzle-done-overlay" class="puzzle-done-overlay" style="display:none">
+    <div class="done-icon">✅</div>
+    <div class="done-text">FINISHED!</div>
+    <div class="done-sub">Waiting for others…</div>
+    <div class="waiting-dots"><span>.</span><span>.</span><span>.</span></div>
+  </div>
+</div>
+
+<!-- =============== DAILY RESULTS =============== -->
+<div id="screen-daily-results" class="screen">
+  <div class="results-header">
+    <div class="results-title">DAILY RESULTS</div>
+    <div class="results-sub" id="dr-last-place-msg"></div>
+  </div>
+  <div class="results-list" id="daily-results-list"></div>
+  <div class="results-footer">Discussion starts in <span id="dr-timer" class="countdown-inline"></span>s</div>
+</div>
+
+<!-- =============== DISCUSSION =============== -->
+<div id="screen-discussion" class="screen discussion-screen">
+  <div class="discussion-left">
+    <div class="disc-header">
+      <div class="disc-title">🗣 DELIBERATION</div>
+      <div class="timer-ring timer-ring-sm"><span class="timer-val" id="disc-timer">60</span></div>
+    </div>
+    <div class="arena-callout" id="disc-arena-player">
+      <div class="callout-label">AUTO IN THE ARENA</div>
+      <div class="callout-name" id="disc-last-name"></div>
+    </div>
+    <div class="disc-hint">Who do you send against them?<br/>You have 60 seconds — make your case.</div>
+    <div class="players-mini" id="disc-players-list"></div>
+  </div>
+  <div class="chat-panel">
+    <div class="chat-header">LIVE CHAT</div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="chat-input" class="chat-input" type="text" placeholder="Say something…" maxlength="200" autocomplete="off"/>
+      <button class="chat-send-btn" id="chat-send">SEND</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============== VOTING =============== -->
+<div id="screen-voting" class="screen voting-screen">
+  <div class="voting-left">
+    <div class="disc-header">
+      <div class="disc-title">🗳 CAST YOUR VOTE</div>
+      <div class="timer-ring timer-ring-sm"><span class="timer-val" id="vote-timer">30</span></div>
+    </div>
+    <div class="arena-callout">
+      <div class="callout-label">ALREADY IN THE ARENA</div>
+      <div class="callout-name" id="vote-last-name"></div>
+    </div>
+    <div id="vote-status-msg" class="vote-status-msg"></div>
+    <div class="vote-buttons" id="vote-buttons"></div>
+    <div id="vote-progress" class="vote-progress-bar-wrap" style="display:none">
+      <div class="vote-progress-label"><span id="vote-count">0</span> / <span id="vote-total">0</span> votes cast</div>
+    </div>
+  </div>
+  <div class="chat-panel">
+    <div class="chat-header">LIVE CHAT</div>
+    <div class="chat-messages" id="vote-chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="vote-chat-input" class="chat-input" type="text" placeholder="Last words…" maxlength="200" autocomplete="off"/>
+      <button class="chat-send-btn" id="vote-chat-send">SEND</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============== VOTE RESULTS =============== -->
+<div id="screen-vote-results" class="screen">
+  <div class="phase-overlay">
+    <div class="phase-title">THE VOTE IS IN</div>
+    <div class="vote-results-grid" id="vote-results-grid"></div>
+    <div class="vs-banner" id="vr-vs-banner"></div>
+  </div>
+</div>
+
+<!-- =============== ARENA INTRO =============== -->
+<div id="screen-arena-intro" class="screen arena-intro-screen">
+  <div class="arena-fire-bg"></div>
+  <div class="arena-intro-content">
+    <div class="arena-logo">THE ARENA</div>
+    <div class="arena-puzzle-name" id="ai-puzzle-name"></div>
+    <div class="arena-vs-row">
+      <div class="arena-player-card" id="ai-p1"></div>
+      <div class="arena-vs-badge">VS</div>
+      <div class="arena-player-card" id="ai-p2"></div>
+    </div>
+    <div class="arena-tagline">FIRST TO FINISH STAYS. LOSER GOES HOME.</div>
+  </div>
+</div>
+
+<!-- =============== ARENA CHALLENGE =============== -->
+<div id="screen-arena" class="screen arena-active-screen">
+  <div class="arena-topbar">
+    <div class="arena-p1-bar" id="arena-p1-bar">
+      <span class="arena-pname" id="arena-p1-name"></span>
+      <span class="arena-status" id="arena-p1-status">⏳</span>
+    </div>
+    <div class="arena-center">
+      <div class="timer-ring timer-ring-lg"><span class="timer-val" id="arena-timer">120</span></div>
+      <div class="arena-badge-sm">THE ARENA</div>
+    </div>
+    <div class="arena-p2-bar" id="arena-p2-bar">
+      <span class="arena-status" id="arena-p2-status">⏳</span>
+      <span class="arena-pname" id="arena-p2-name"></span>
+    </div>
+  </div>
+  <div id="arena-puzzle-area" class="puzzle-area arena-puzzle-area"></div>
+  <div id="arena-watch-overlay" class="arena-watch-overlay" style="display:none">
+    <div class="watch-title">👁 WATCHING THE ARENA</div>
+    <div id="arena-watch-status" class="watch-status"></div>
+  </div>
+  <div id="arena-done-overlay" class="puzzle-done-overlay" style="display:none">
+    <div class="done-icon">🔥</div>
+    <div class="done-text">YOU FINISHED!</div>
+    <div class="done-sub">Waiting for your opponent…</div>
+  </div>
+</div>
+
+<!-- =============== ARENA RESULTS =============== -->
+<div id="screen-arena-results" class="screen arena-results-screen">
+  <div class="phase-overlay">
+    <div class="phase-title">ARENA RESULTS</div>
+    <div class="arena-final-vs" id="arena-final-vs"></div>
+    <div class="winner-announce" id="arena-winner-announce"></div>
+  </div>
+</div>
+
+<!-- =============== ELIMINATION =============== -->
+<div id="screen-elimination" class="screen elimination-screen">
+  <div class="elim-content">
+    <div class="elim-title">ELIMINATED</div>
+    <div class="elim-name" id="elim-name"></div>
+    <div class="elim-quote">"THE CHALLENGE HAS SPOKEN."</div>
+    <div class="elim-remaining" id="elim-remaining"></div>
+  </div>
+</div>
+
+<!-- =============== GAME OVER =============== -->
+<div id="screen-game-over" class="screen game-over-screen">
+  <div class="fireworks"></div>
+  <div class="go-content">
+    <div class="go-title">🏆 CHAMPION 🏆</div>
+    <div class="go-winner" id="go-winner"></div>
+    <div class="go-sub">WINNER OF THE CHALLENGE</div>
+    <div class="go-eliminated" id="go-eliminated"></div>
+    <button class="btn btn-primary btn-xl" id="btn-play-again">PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- =============== GLOBAL TIMER BAR =============== -->
+<div id="timer-bar" class="timer-bar" style="display:none">
+  <div id="timer-bar-fill" class="timer-bar-fill"></div>
+</div>
+
+<!-- =============== TOAST =============== -->
+<div id="toast" class="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="puzzles.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
