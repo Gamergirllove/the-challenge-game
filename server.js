@@ -12,31 +12,57 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ============================================================
 // CONSTANTS
 // ============================================================
-const MAX_PLAYERS   = 10;
-const MIN_PLAYERS   = 3;
+const MAX_PLAYERS    = 10;
+const MIN_PLAYERS    = 5;
 const DISCUSSION_SEC = 60;
 const VOTING_SEC     = 30;
 const DAILY_SEC      = 90;
 const DUEL_SEC       = 120;
 const INTRO_SEC      = 4;
 const RESULTS_SEC    = 5;
-const ARENA_INTRO_SEC = 6;
+const ARENA_INTRO_SEC= 6;
 const ELIM_SEC       = 6;
 
 const PHASE = {
-  LOBBY:          'lobby',
-  DAILY_INTRO:    'daily_intro',
-  DAILY:          'daily',
-  DAILY_RESULTS:  'daily_results',
-  DISCUSSION:     'discussion',
-  VOTING:         'voting',
-  VOTE_RESULTS:   'vote_results',
-  ARENA_INTRO:    'arena_intro',
-  ARENA:          'arena',
-  ARENA_RESULTS:  'arena_results',
-  ELIMINATION:    'elimination',
-  GAME_OVER:      'game_over',
+  LOBBY:         'lobby',
+  DAILY_INTRO:   'daily_intro',
+  DAILY:         'daily',
+  DAILY_RESULTS: 'daily_results',
+  DISCUSSION:    'discussion',
+  VOTING:        'voting',
+  VOTE_RESULTS:  'vote_results',
+  ARENA_INTRO:   'arena_intro',
+  ARENA:         'arena',
+  ARENA_RESULTS: 'arena_results',
+  ELIMINATION:   'elimination',
+  GAME_OVER:     'game_over',
 };
+
+// Separate pools — daily != arena (10 each)
+const DAILY_POOL = [
+  'memory',       // Memory Match
+  'quickmath',    // Quick Math
+  'colorseq',     // Color Sequence
+  'wordscramble', // Word Scramble
+  'tessellations',// Tessellations
+  'patternmatch', // Pattern Match
+  'emojisort',    // Emoji Sort
+  'curling',      // Curling
+  'jumprope',     // Jump Rope
+  'minesweeper',  // Minesweeper Light
+];
+const ARENA_POOL = [
+  'trivia',       // Trivia Showdown
+  'reaction',     // Reaction Test
+  'numberhunt',   // Number Hunt
+  'tapfrenzy',    // Tap Frenzy
+  'fastfingers',  // Fast Fingers
+  'gridlock',     // Grid Lock
+  'speedsort',    // Speed Sort
+  'findbomb',     // Find the Bomb
+  'mathrace',     // Math Race
+  'simonextreme', // Simon Extreme (faster color seq)
+];
 
 // ============================================================
 // PUZZLE DATA
@@ -44,28 +70,28 @@ const PHASE = {
 const EMOJI_SET = ['🔥','⚡','💎','🏆','🎯','💣','🌊','🎲','👑','🦁','🐺','🦊','🐍','🦅','🌟','💰','🎭','⚔️','🏅','🎪'];
 
 const MATH_BANK = [
-  {q:'7 × 8',    a:56,  w:[48,54,63]},
-  {q:'144 ÷ 12', a:12,  w:[11,13,14]},
-  {q:'15 + 28',  a:43,  w:[41,44,45]},
-  {q:'92 − 37',  a:55,  w:[54,56,65]},
-  {q:'6 × 9',    a:54,  w:[48,56,63]},
-  {q:'√64',      a:8,   w:[6,7,9]},
-  {q:'17 × 3',   a:51,  w:[48,52,54]},
-  {q:'100 ÷ 4',  a:25,  w:[20,24,26]},
-  {q:'13²',      a:169, w:[156,163,172]},
-  {q:'48 + 37',  a:85,  w:[83,84,86]},
-  {q:'9 × 7',    a:63,  w:[54,62,72]},
-  {q:'200 − 143',a:57,  w:[55,58,67]},
-  {q:'8 × 8',    a:64,  w:[56,63,72]},
-  {q:'121 ÷ 11', a:11,  w:[9,10,12]},
-  {q:'45 + 56',  a:101, w:[99,100,102]},
-  {q:'14 × 6',   a:84,  w:[78,80,90]},
-  {q:'256 ÷ 16', a:16,  w:[14,15,18]},
-  {q:'√144',     a:12,  w:[10,11,13]},
+  {q:'7 × 8',     a:56,  w:[48,54,63]},
+  {q:'144 ÷ 12',  a:12,  w:[11,13,14]},
+  {q:'15 + 28',   a:43,  w:[41,44,45]},
+  {q:'92 − 37',   a:55,  w:[54,56,65]},
+  {q:'6 × 9',     a:54,  w:[48,56,63]},
+  {q:'√64',       a:8,   w:[6,7,9]},
+  {q:'17 × 3',    a:51,  w:[48,52,54]},
+  {q:'100 ÷ 4',   a:25,  w:[20,24,26]},
+  {q:'13²',       a:169, w:[156,163,172]},
+  {q:'48 + 37',   a:85,  w:[83,84,86]},
+  {q:'9 × 7',     a:63,  w:[54,62,72]},
+  {q:'200 − 143', a:57,  w:[55,58,67]},
+  {q:'8 × 8',     a:64,  w:[56,63,72]},
+  {q:'121 ÷ 11',  a:11,  w:[9,10,12]},
+  {q:'45 + 56',   a:101, w:[99,100,102]},
+  {q:'14 × 6',    a:84,  w:[78,80,90]},
+  {q:'256 ÷ 16',  a:16,  w:[14,15,18]},
+  {q:'√144',      a:12,  w:[10,11,13]},
 ];
 
 const WORD_BANK = [
-  {word:'CHALLENGE', hint:'MTV show'},
+  {word:'CHALLENGE', hint:'Social competition'},
   {word:'ALLIANCE',  hint:'Team pact'},
   {word:'STRATEGY',  hint:'Game plan'},
   {word:'BETRAYAL',  hint:'Backstab'},
@@ -83,25 +109,34 @@ const WORD_BANK = [
 ];
 
 const TRIVIA_BANK = [
-  {q:'MTV stands for?',                          a:'Music Television',         w:['Modern TV','Music TV','Mega Television']},
-  {q:'The Challenge originally spun off from?',  a:'The Real World',           w:['Road Rules','Fear Factor','Survivor']},
-  {q:'The Challenge host is?',                   a:'TJ Lavin',                 w:['Jeff Probst','Ryan Seacrest','Carson Daly']},
-  {q:'Which is NOT a Challenge season?',         a:'The Purge',                w:['Battle of the Exes','Rivals','War of the Worlds']},
-  {q:'Among Us max impostors?',                  a:'3',                        w:['2','4','5']},
-  {q:'Among Us crewmates complete ___ to win?',  a:'Tasks',                    w:['Puzzles','Missions','Contracts']},
-  {q:'Social deduction games also called?',      a:'Mafia-style games',        w:['Strategy games','Word games','Card games']},
-  {q:'The Challenge finale is called?',          a:'The Final',                w:['The Gauntlet','The Arena','The Last Stand']},
-  {q:'Which decade did MTV launch?',             a:'1980s',                    w:['1970s','1990s','2000s']},
-  {q:'MTV first music video aired was by?',      a:'The Buggles',              w:['Michael Jackson','Madonna','U2']},
-  {q:'Among Us setting?',                        a:'Spaceship',                w:['Submarine','Space station','Planet']},
-  {q:'Classic Challenge format: win daily to?',  a:'Get safety from elimination', w:['Win money','Pick teams','Skip a round']},
-  {q:'MTV launched in which year?',              a:'1981',                     w:['1979','1983','1985']},
-  {q:'The Challenge "TJ" host full first name?', a:'Thomas',                   w:['Tyler','Travis','Timothy']},
-  {q:'Challenge players who return are called?', a:'Veterans',                 w:['Champions','Legends','Elites']},
+  {q:'Social deduction games are also called?',       a:'Mafia-style games',     w:['Strategy games','Word games','Card games']},
+  {q:'In Battle Royale games, how many players win?', a:'1',                     w:['2','3','5']},
+  {q:'Which skill is most key in social games?',      a:'Persuasion',            w:['Speed','Memory','Math']},
+  {q:'A player who hides their true role is called?', a:'A wolf in sheep clothing',w:['A rookie','A veteran','A champion']},
+  {q:'What does "throwing the comp" mean?',           a:'Losing on purpose',     w:['Winning too fast','Quitting','Voting yourself']},
+  {q:'An "alliance" in a game is?',                   a:'A secret agreement',    w:['A scoring bonus','A penalty','A tiebreaker']},
+  {q:'"Social capital" in a game means?',             a:'Trust and relationships',w:['Total points','Win streak','Vote count']},
+  {q:'First player targeted is often called?',        a:'The weakest link',      w:['The hero','The anchor','The shield']},
+  {q:'Winning a tiebreaker is called?',               a:'Clutching up',          w:['Lucky break','Cheating','Sabotage']},
+  {q:'A "blindside" in a game means?',                a:'Surprise elimination',  w:['Bonus round','Free pass','Power vote']},
+  {q:'What is a "throwaway vote"?',                   a:'A vote that doesnt matter', w:['A super vote','A veto','A penalty']},
+  {q:'When all players vote the same it is called?',  a:'A unanimous vote',      w:['A super vote','A sweep','A default']},
+  {q:'"Going rogue" in an alliance means?',           a:'Acting independently',  w:['Getting extra votes','Winning immunity','Joining another team']},
+  {q:'A "comp beast" is someone who?',                a:'Wins every challenge',  w:['Talks too much','Never votes','Hides all game']},
+  {q:'The last two players compete in?',              a:'The Final',             w:['The Duel','The Vote','The Gauntlet']},
 ];
 
 const COLORS = ['RED','BLUE','GREEN','YELLOW','PURPLE'];
 const COLOR_HEX = {RED:'#e74c3c',BLUE:'#3498db',GREEN:'#2ecc71',YELLOW:'#f1c40f',PURPLE:'#9b59b6'};
+
+// Tessellation pattern colors
+const TESS_PALETTES = [
+  ['#e74c3c','#3498db'],
+  ['#e74c3c','#3498db','#2ecc71'],
+  ['#e74c3c','#3498db','#2ecc71','#f1c40f'],
+  ['#9b59b6','#e67e22'],
+  ['#9b59b6','#1abc9c','#e74c3c'],
+];
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
@@ -110,12 +145,28 @@ function scrambleWord(w) {
 }
 
 const PUZZLE_NAMES = {
-  memory:      '🃏 Memory Match',
-  quickmath:   '🔢 Quick Math',
-  reaction:    '⚡ Reaction Test',
-  wordscramble:'🔤 Word Scramble',
-  colorseq:    '🎨 Color Sequence',
-  trivia:      '❓ Challenge Trivia',
+  // Daily
+  memory:        '🃏 Memory Match',
+  quickmath:     '🔢 Quick Math',
+  colorseq:      '🎨 Color Sequence',
+  wordscramble:  '🔤 Word Scramble',
+  tessellations: '🔷 Tessellations',
+  patternmatch:  '🧩 Pattern Match',
+  emojisort:     '🗂 Emoji Sort',
+  curling:       '🥌 Curling',
+  jumprope:      '🪢 Jump Rope',
+  minesweeper:   '💣 Minesweeper',
+  // Arena
+  trivia:        '❓ Trivia Showdown',
+  reaction:      '⚡ Reaction Test',
+  numberhunt:    '🎯 Number Hunt',
+  tapfrenzy:     '👆 Tap Frenzy',
+  fastfingers:   '⌨ Fast Fingers',
+  gridlock:      '🔍 Grid Lock',
+  speedsort:     '⬆ Speed Sort',
+  findbomb:      '💣 Find the Bomb',
+  mathrace:      '🏎 Math Race',
+  simonextreme:  '🔴 Simon Extreme',
 };
 
 function makePuzzle(type) {
@@ -142,7 +193,6 @@ function makePuzzle(type) {
       return { type, words };
     }
     case 'colorseq': {
-      // Pre-generate sequence up to 15 long for reproducibility
       const seq = Array.from({length:15}, () => COLORS[Math.floor(Math.random()*COLORS.length)]);
       return { type, sequence: seq, colors: COLORS, colorHex: COLOR_HEX };
     }
@@ -152,13 +202,151 @@ function makePuzzle(type) {
       }));
       return { type, questions: qs };
     }
+    case 'tessellations': {
+      const patternTypes = ['checker','diagonal','cross','stripes'];
+      const pt = patternTypes[Math.floor(Math.random() * patternTypes.length)];
+      const palette = shuffle(TESS_PALETTES)[0];
+      const numColors = pt === 'checker' ? 2 : pt === 'diagonal' ? 3 : pt === 'cross' ? 4 : 3;
+      const colors = palette.slice(0, Math.min(numColors, palette.length));
+      const size = 5;
+      const grid = [];
+      for (let r = 0; r < size; r++) {
+        const row = [];
+        for (let c = 0; c < size; c++) {
+          let idx;
+          if      (pt === 'checker')   idx = (r + c) % 2;
+          else if (pt === 'diagonal')  idx = (r + c) % 3;
+          else if (pt === 'cross')     idx = (r % 2) * 2 + (c % 2);
+          else                         idx = r % 3; // stripes
+          row.push(idx % colors.length);
+        }
+        grid.push(row);
+      }
+      const allCells = [];
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) allCells.push([r, c]);
+      const hidden = shuffle(allCells).slice(0, 9);
+      return { type, grid, hidden, colors, size };
+    }
+    case 'numberhunt': {
+      const nums = shuffle(Array.from({length: 16}, (_, i) => i + 1));
+      return { type, nums };
+    }
+    // ── DAILY: PATTERN MATCH ──────────────────────────────
+    case 'patternmatch': {
+      const patColors = ['#e74c3c','#3498db','#2ecc71','#9b59b6','#f39c12'];
+      const sizes = [3, 4];
+      const rounds = Array.from({length:5}, () => {
+        const sz = sizes[Math.floor(Math.random()*sizes.length)];
+        const density = 0.35 + Math.random()*0.25;
+        const pattern = Array.from({length:sz*sz}, ()=>Math.random()<density);
+        const color = patColors[Math.floor(Math.random()*patColors.length)];
+        return { size:sz, pattern, color };
+      });
+      return { type, rounds };
+    }
+    // ── DAILY: EMOJI SORT ─────────────────────────────────
+    case 'emojisort': {
+      const categories = [
+        { name:'Animals',  emoji:'🐾', items:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨'] },
+        { name:'Food',     emoji:'🍽', items:['🍎','🍕','🍔','🌮','🍜','🍣','🍰','🍪','🍩','🥗'] },
+        { name:'Sports',   emoji:'🏅', items:['⚽','🏀','🎾','⚾','🏈','🎱','🏊','🚴','🥊','🏋️'] },
+        { name:'Nature',   emoji:'🌿', items:['🌺','🌸','🍀','🌵','🌲','🍄','🌈','⭐','🌙','☀️'] },
+      ];
+      const chosen = shuffle(categories).slice(0, 2);
+      const items = [];
+      chosen.forEach(cat => {
+        shuffle(cat.items).slice(0, 5).forEach(emoji => items.push({ emoji, category: cat.name }));
+      });
+      return { type, items: shuffle(items), categories: chosen.map(c=>({name:c.name,emoji:c.emoji})) };
+    }
+    // ── DAILY: CURLING ────────────────────────────────────
+    case 'curling': {
+      return { type, shots: 5 };
+    }
+    // ── DAILY: JUMP ROPE ──────────────────────────────────
+    case 'jumprope': {
+      // Beat intervals in ms (randomized slightly per round, speeds up)
+      const baseInterval = 1100;
+      const beats = Array.from({length:20}, (_, i) => {
+        const speedup = 1 - (i * 0.015); // gets faster
+        return Math.max(600, Math.round(baseInterval * speedup));
+      });
+      return { type, beats, totalJumps: 20 };
+    }
+    // ── DAILY: MINESWEEPER LIGHT ──────────────────────────
+    case 'minesweeper': {
+      const W=6, H=6, mines=8;
+      const cells = Array.from({length:W*H},()=>({mine:false,revealed:false,count:0}));
+      const pos = shuffle([...Array(W*H).keys()]).slice(0,mines);
+      pos.forEach(i=>cells[i].mine=true);
+      cells.forEach((c,i)=>{
+        if(c.mine) return;
+        const row=Math.floor(i/W), col=i%W;
+        let count=0;
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=row+dr,nc=col+dc;
+          if(nr>=0&&nr<H&&nc>=0&&nc<W) if(cells[nr*W+nc].mine) count++;
+        }
+        c.count=count;
+      });
+      return { type, W, H, cells: cells.map(c=>({mine:c.mine,count:c.count})), mines };
+    }
+    // ── ARENA: TAP FRENZY ─────────────────────────────────
+    case 'tapfrenzy': {
+      return { type };
+    }
+    // ── ARENA: FAST FINGERS ───────────────────────────────
+    case 'fastfingers': {
+      const wordLists = [
+        ['FIRE','WAVE','JUMP','BOLD','CLAN'],
+        ['ARENA','VOTED','POWER','ELITE','CHASE'],
+        ['RIVAL','CROWN','BRAVE','SURGE','BLAZE'],
+      ];
+      const words = shuffle(wordLists)[0];
+      return { type, words };
+    }
+    // ── ARENA: GRID LOCK ──────────────────────────────────
+    case 'gridlock': {
+      const operators = ['+','-','×'];
+      const rounds_data = Array.from({length:6}, () => {
+        const op = operators[Math.floor(Math.random()*operators.length)];
+        let a = Math.floor(Math.random()*9)+2, b = Math.floor(Math.random()*9)+2;
+        let target; if(op==='+') target=a+b; else if(op==='-') target=a-b; else target=a*b;
+        const answers = [String(target)];
+        const distractors = shuffle([target-1,target+1,target-2,target+2,target*2,Math.floor(target/2)].filter(n=>n!==target&&n>0)).slice(0,11).map(String);
+        const grid = shuffle([...answers,...distractors]).slice(0,12);
+        if(!grid.includes(String(target))) grid[0] = String(target);
+        return { target:`${a} ${op} ${b} = ?`, grid: shuffle(grid), answers };
+      });
+      return { type, rounds: 6, rounds_data };
+    }
+    // ── ARENA: SPEED SORT ─────────────────────────────────
+    case 'speedsort': {
+      const items = shuffle(Array.from({length:16},(_,i)=>i+1));
+      return { type, items };
+    }
+    // ── ARENA: FIND THE BOMB ──────────────────────────────
+    case 'findbomb': {
+      const rounds_data = Array.from({length:8}, () => {
+        const size = 4;
+        const bombPos = Math.floor(Math.random()*size*size);
+        const grid = Array.from({length:size*size},(_,i)=> i===bombPos?'💣': ['😊','🌟','🎈','🎭','🦊','🌺','⚡','🎯'][Math.floor(Math.random()*8)]);
+        const hint = `Row ${Math.floor(bombPos/size)+1}`;
+        return { grid: shuffle(grid.map((e,i)=>({emoji:e,isBomb:e==='💣'}))), size, hint: `The bomb is in ${hint}` };
+      });
+      return { type, rounds_data };
+    }
+    // ── ARENA: MATH RACE ──────────────────────────────────
+    case 'mathrace': {
+      const qs = shuffle(MATH_BANK).slice(0,10).map(q=>({ q:q.q, a:q.a, choices:shuffle([q.a,...q.w]) }));
+      return { type, questions: qs };
+    }
+    // ── ARENA: SIMON EXTREME (faster color seq) ───────────
+    case 'simonextreme': {
+      const seq = Array.from({length:20}, ()=>COLORS[Math.floor(Math.random()*COLORS.length)]);
+      return { type, sequence:seq, colors:COLORS, colorHex:COLOR_HEX, speed:'fast' };
+    }
   }
-}
-
-function getRandomPuzzleTypes() {
-  const all = Object.keys(PUZZLE_NAMES);
-  const [daily, duel] = shuffle(all);
-  return { daily, duel };
 }
 
 // ============================================================
@@ -167,12 +355,26 @@ function getRandomPuzzleTypes() {
 function calcScore(type, result, ms) {
   const timeBonus = (max, cap) => Math.max(0, Math.min(max, max - Math.floor(ms / cap)));
   switch (type) {
-    case 'memory':      return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 150)));
-    case 'quickmath':   return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'reaction':    return Math.max(0, Math.min(1000, 1000 - Math.floor(result.avgMs / 3)));
-    case 'wordscramble':return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'colorseq':    return Math.min(1000, result.level * 100);
-    case 'trivia':      return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'memory':        return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 150)));
+    case 'quickmath':     return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'reaction':      return Math.max(0, Math.min(1000, 1000 - Math.floor(result.avgMs / 3)));
+    case 'wordscramble':  return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'colorseq':      return Math.min(1000, result.level * 100);
+    case 'trivia':        return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'tessellations': return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'numberhunt':    return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 5)));
+    case 'patternmatch':  return Math.floor((result.score||0) / (result.total||5) * 1000);
+    case 'emojisort':     return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'curling':       return Math.min(1000, (result.score||0) * 20);
+    case 'jumprope':      return Math.min(1000, (result.hits||0) * 50);
+    case 'minesweeper':   return Math.min(1000, (result.safe||0) * 40 + timeBonus(200, 200));
+    case 'tapfrenzy':     return Math.min(1000, (result.taps||0) * 8);
+    case 'fastfingers':   return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 10)));
+    case 'gridlock':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
+    case 'speedsort':     return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 5)));
+    case 'findbomb':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
+    case 'mathrace':      return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
+    case 'simonextreme':  return Math.min(1000, (result.level||0) * 100);
     default: return 0;
   }
 }
@@ -191,12 +393,13 @@ function createRoom(hostId, hostName) {
   let code; do { code = genCode(); } while (rooms[code]);
   rooms[code] = {
     code, host: hostId, phase: PHASE.LOBBY,
-    players: {}, round: 0,
+    players: {}, spectators: {},
+    round: 0,
     puzzleType: null, puzzleData: null,
     duelType: null,   duelData: null,
     lastPlaceId: null, duelOpponentId: null,
-    votes: {}, duelResults: {},
-    chatHistory: [], eliminated: [],
+    votes: {}, duelResults: {}, liveScores: {},
+    chatHistory: [], eliminated: [], roundHistory: [],
     timer: null, tickInterval: null,
   };
   addPlayer(code, hostId, hostName, true);
@@ -209,6 +412,26 @@ function addPlayer(code, id, name, isHost=false) {
 
 function alive(code) {
   return Object.values(rooms[code]?.players || {}).filter(p => p.alive);
+}
+
+function getLeaderboard(code) {
+  return alive(code)
+    .sort((a, b) => b.totalScore - a.totalScore)
+    .map((p, i) => ({ rank: i+1, id: p.id, name: p.name, totalScore: p.totalScore }));
+}
+
+function broadcastSpectatorUpdate(code) {
+  const r = rooms[code]; if (!r) return;
+  const specIds = Object.keys(r.spectators);
+  if (!specIds.length) return;
+  const update = {
+    leaderboard: getLeaderboard(code),
+    history: r.roundHistory,
+    players: alive(code).map(p => ({ id:p.id, name:p.name, totalScore:p.totalScore, roundScore:p.roundScore })),
+    phase: r.phase,
+    round: r.round,
+  };
+  specIds.forEach(sid => io.to(sid).emit('spectator:update', update));
 }
 
 function roomState(code) {
@@ -248,13 +471,20 @@ function setPhase(code, phase, data={}) {
 // ============================================================
 // GAME FLOW
 // ============================================================
+function getRandomPuzzleTypes() {
+  // Ensure daily and duel come from different pools
+  const daily = shuffle(DAILY_POOL)[0];
+  const duel  = shuffle(ARENA_POOL)[0];
+  return { daily, duel };
+}
+
 function startRound(code) {
   const r = rooms[code]; if (!r) return;
   r.round++;
   const { daily, duel } = getRandomPuzzleTypes();
   r.puzzleType = daily;  r.puzzleData = makePuzzle(daily);
   r.duelType   = duel;   r.duelData   = makePuzzle(duel);
-  r.votes = {}; r.duelResults = {};
+  r.votes = {}; r.duelResults = {}; r.liveScores = {};
   r.lastPlaceId = null; r.duelOpponentId = null;
   alive(code).forEach(p => { p.roundScore=0; p.finished=false; });
 
@@ -264,6 +494,7 @@ function startRound(code) {
     puzzleName: PUZZLE_NAMES[daily],
     playerCount: alive(code).length,
   });
+  broadcastSpectatorUpdate(code);
   setTimeout(() => { if (rooms[code]?.phase === PHASE.DAILY_INTRO) startDaily(code); }, INTRO_SEC * 1000);
 }
 
@@ -286,6 +517,7 @@ function endDaily(code) {
     lastPlaceId: r.lastPlaceId,
     lastPlaceName: r.players[r.lastPlaceId]?.name,
   });
+  broadcastSpectatorUpdate(code);
   setTimeout(() => { if (rooms[code]?.phase === PHASE.DAILY_RESULTS) startDiscussion(code); }, RESULTS_SEC * 1000);
 }
 
@@ -322,7 +554,6 @@ function endVoting(code) {
     const c = counts[p.id]||0;
     if (c > max) { max=c; top=[p.id]; } else if (c===max) top.push(p.id);
   });
-  // If nobody voted, pick random
   if (top.length === 0) top = others.map(p=>p.id);
   r.duelOpponentId = top[Math.floor(Math.random()*top.length)];
 
@@ -353,7 +584,7 @@ function startArenaIntro(code) {
 
 function startArena(code) {
   const r = rooms[code]; if (!r) return;
-  r.duelResults = {};
+  r.duelResults = {}; r.liveScores = {};
   const p1 = r.players[r.lastPlaceId];
   const p2 = r.players[r.duelOpponentId];
   if (p1) p1.finished = false;
@@ -364,6 +595,7 @@ function startArena(code) {
     duelType: r.duelType, puzzleData: r.duelData, timeLimit: DUEL_SEC,
   });
   startTimer(code, DUEL_SEC, () => endArena(code));
+  broadcastSpectatorUpdate(code);
 }
 
 function endArena(code) {
@@ -376,12 +608,24 @@ function endArena(code) {
   else if (s2 > s1)  { winnerId=r.duelOpponentId; loserId=r.lastPlaceId; }
   else               { const c=Math.random()<0.5; winnerId=c?r.lastPlaceId:r.duelOpponentId; loserId=c?r.duelOpponentId:r.lastPlaceId; }
 
+  // Save to round history
+  r.roundHistory.push({
+    round: r.round,
+    p1: r.players[r.lastPlaceId]?.name,
+    p2: r.players[r.duelOpponentId]?.name,
+    winner: r.players[winnerId]?.name,
+    loser:  r.players[loserId]?.name,
+    puzzle: r.duelType,
+    puzzleName: PUZZLE_NAMES[r.duelType],
+  });
+
   setPhase(code, PHASE.ARENA_RESULTS, {
-    p1Id:r.lastPlaceId,       p1Name:r.players[r.lastPlaceId]?.name,    p1Score:s1,
-    p2Id:r.duelOpponentId,    p2Name:r.players[r.duelOpponentId]?.name, p2Score:s2,
+    p1Id:r.lastPlaceId,     p1Name:r.players[r.lastPlaceId]?.name,     p1Score:s1,
+    p2Id:r.duelOpponentId,  p2Name:r.players[r.duelOpponentId]?.name,  p2Score:s2,
     winnerId, winnerName:r.players[winnerId]?.name,
     loserId,  loserName:r.players[loserId]?.name,
   });
+  broadcastSpectatorUpdate(code);
   setTimeout(() => { if (rooms[code]?.phase === PHASE.ARENA_RESULTS) eliminate(code, loserId); }, RESULTS_SEC * 1000);
 }
 
@@ -391,23 +635,31 @@ function eliminate(code, playerId) {
   p.alive = false;
   r.eliminated.push({ id:playerId, name:p.name, round:r.round });
 
+  // Send choice ONLY to the eliminated player's socket
+  io.to(playerId).emit('elimination:choice', {
+    eliminatedName: p.name,
+    round: r.round,
+  });
+
   setPhase(code, PHASE.ELIMINATION, {
     eliminatedId:   playerId,
     eliminatedName: p.name,
     eliminated:     r.eliminated,
     remaining:      alive(code).length,
   });
+  broadcastSpectatorUpdate(code);
 
   setTimeout(() => {
     if (!rooms[code]) return;
     const al = alive(code);
     if (al.length <= 1) {
-      const w = al[0];
       setPhase(code, PHASE.GAME_OVER, {
-        winnerId:   w?.id,
-        winnerName: w?.name || 'Nobody',
+        winnerId:   al[0]?.id,
+        winnerName: al[0]?.name || 'Nobody',
         eliminated: r.eliminated,
+        roundHistory: r.roundHistory,
       });
+      broadcastSpectatorUpdate(code);
     } else {
       startRound(code);
     }
@@ -426,21 +678,23 @@ io.on('connection', socket => {
     socket.join(code);
     socket.data.code = code;
     socket.data.name = n;
+    socket.data.isSpectator = false;
     socket.emit('room:created', { code, state: roomState(code) });
   });
 
   socket.on('room:join', ({ code, name }) => {
     const upper = code?.toUpperCase().trim();
     const r = rooms[upper];
-    if (!r)                             return socket.emit('error', { msg: 'Room not found. Check the code.' });
-    if (r.phase !== PHASE.LOBBY)        return socket.emit('error', { msg: 'Game already in progress.' });
-    if (!name?.trim())                  return socket.emit('error', { msg: 'Enter your name.' });
-    if (alive(upper).length >= MAX_PLAYERS) return socket.emit('error', { msg: 'Room is full (10/10).' });
+    if (!r)                                  return socket.emit('error', { msg: 'Room not found. Check the code.' });
+    if (r.phase !== PHASE.LOBBY)             return socket.emit('error', { msg: 'Game already in progress.' });
+    if (!name?.trim())                       return socket.emit('error', { msg: 'Enter your name.' });
+    if (alive(upper).length >= MAX_PLAYERS)  return socket.emit('error', { msg: 'Room is full (10/10).' });
     const n = name.trim().slice(0, 20);
     addPlayer(upper, socket.id, n);
     socket.join(upper);
     socket.data.code = upper;
     socket.data.name = n;
+    socket.data.isSpectator = false;
     socket.emit('room:joined', { code: upper, state: roomState(upper) });
     socket.to(upper).emit('room:update', { state: roomState(upper) });
   });
@@ -450,7 +704,7 @@ io.on('connection', socket => {
     const r = rooms[code]; if (!r) return;
     if (r.host !== socket.id)        return socket.emit('error', { msg: 'Only the host can start.' });
     if (r.phase !== PHASE.LOBBY)     return;
-    if (alive(code).length < MIN_PLAYERS) return socket.emit('error', { msg: `Need at least ${MIN_PLAYERS} players.` });
+    if (alive(code).length < MIN_PLAYERS) return socket.emit('error', { msg: `Need at least ${MIN_PLAYERS} players to start.` });
     startRound(code);
   });
 
@@ -468,7 +722,13 @@ io.on('connection', socket => {
 
     if (r.phase === PHASE.ARENA) {
       r.duelResults[socket.id] = { score };
+      r.liveScores[socket.id] = score;
       io.to(code).emit('duel:progress', { playerId: socket.id, playerName: p.name });
+      // Broadcast final live scores
+      io.to(code).emit('arena:live', {
+        p1Id: r.lastPlaceId,   p1Score: r.liveScores[r.lastPlaceId]   || 0,
+        p2Id: r.duelOpponentId, p2Score: r.liveScores[r.duelOpponentId] || 0,
+      });
       if (r.duelResults[r.lastPlaceId] && r.duelResults[r.duelOpponentId]) endArena(code);
     } else {
       const al = alive(code);
@@ -478,13 +738,27 @@ io.on('connection', socket => {
     }
   });
 
+  // Live score progress during arena puzzle
+  socket.on('puzzle:progress', ({ score }) => {
+    const { code } = socket.data;
+    const r = rooms[code]; if (!r) return;
+    if (r.phase !== PHASE.ARENA) return;
+    if (socket.id !== r.lastPlaceId && socket.id !== r.duelOpponentId) return;
+    r.liveScores[socket.id] = score;
+    io.to(code).emit('arena:live', {
+      p1Id: r.lastPlaceId,    p1Score: r.liveScores[r.lastPlaceId]    || 0,
+      p2Id: r.duelOpponentId, p2Score: r.liveScores[r.duelOpponentId] || 0,
+    });
+  });
+
   socket.on('chat:send', ({ text }) => {
     const { code } = socket.data;
     const r = rooms[code]; if (!r) return;
     if (r.phase !== PHASE.DISCUSSION && r.phase !== PHASE.VOTING) return;
     if (!text?.trim()) return;
-    const p = r.players[socket.id]; if (!p || !p.alive) return;
-    const msg = { id: Date.now()+Math.random(), playerId:socket.id, playerName:p.name, text:text.trim().slice(0,200), ts:Date.now() };
+    const p = r.players[socket.id] || r.spectators[socket.id];
+    if (!p) return;
+    const msg = { id: Date.now()+Math.random(), playerId:socket.id, playerName:p.name, text:text.trim().slice(0,200), ts:Date.now(), isSpec: !!r.spectators[socket.id] };
     r.chatHistory.push(msg);
     io.to(code).emit('chat:message', msg);
   });
@@ -499,15 +773,50 @@ io.on('connection', socket => {
     r.votes[socket.id] = targetId;
     socket.emit('vote:confirmed', { targetId, targetName: target.name });
     io.to(code).emit('vote:update', { count: Object.keys(r.votes).length, total: alive(code).filter(p=>p.id!==r.lastPlaceId).length });
-    // Early end if all voted
     if (Object.keys(r.votes).length >= alive(code).filter(p=>p.id!==r.lastPlaceId).length) {
       clearTimer(code); endVoting(code);
     }
   });
 
+  // Spectate choice
+  socket.on('spectate:join', () => {
+    const { code } = socket.data;
+    const r = rooms[code]; if (!r) return;
+    const p = r.players[socket.id];
+    if (!p || p.alive) return;
+    socket.data.isSpectator = true;
+    r.spectators[socket.id] = { id: socket.id, name: p.name, watchingId: null };
+    socket.emit('spectator:init', {
+      leaderboard: getLeaderboard(code),
+      history:     r.roundHistory,
+      players:     alive(code).map(pl => ({ id:pl.id, name:pl.name, totalScore:pl.totalScore, roundScore:pl.roundScore })),
+      phase:       r.phase,
+      round:       r.round,
+    });
+  });
+
+  socket.on('spectate:watch', ({ targetId }) => {
+    const { code } = socket.data;
+    const r = rooms[code]; if (!r) return;
+    const s = r.spectators[socket.id]; if (!s) return;
+    s.watchingId = targetId;
+    socket.emit('spectator:watching', { targetId, targetName: r.players[targetId]?.name });
+  });
+
+  socket.on('game:leave', () => {
+    socket.disconnect();
+  });
+
   socket.on('disconnect', () => {
     const { code } = socket.data || {};
     const r = rooms[code]; if (!r) return;
+
+    // Remove from spectators if spectating
+    if (r.spectators[socket.id]) {
+      delete r.spectators[socket.id];
+      return;
+    }
+
     const p = r.players[socket.id]; if (!p) return;
     if (r.phase === PHASE.LOBBY) {
       delete r.players[socket.id];
@@ -532,4 +841,4 @@ io.on('connection', socket => {
 // START
 // ============================================================
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🏆 The Challenge running at http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Challenge.io running at http://localhost:${PORT}`));

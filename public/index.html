@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The Challenge</title>
+  <title>Challenge.io</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
@@ -15,9 +15,8 @@
   <div class="landing-bg"></div>
   <div class="landing-content">
     <div class="logo">
-      <div class="logo-mtv">MTV</div>
-      <div class="logo-title">THE CHALLENGE</div>
-      <div class="logo-sub">SOCIAL EDITION</div>
+      <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
+      <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
     </div>
     <div class="landing-card">
       <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
@@ -37,7 +36,7 @@
 <!-- =============== LOBBY =============== -->
 <div id="screen-lobby" class="screen">
   <div class="lobby-header">
-    <div class="logo-small">⚡ THE CHALLENGE</div>
+    <div class="logo-small">⚡ CHALLENGE.IO</div>
     <div class="room-code-display">
       <span class="code-label">ROOM CODE</span>
       <span id="lobby-code" class="code-value"></span>
@@ -188,6 +187,17 @@
       <span class="arena-pname" id="arena-p2-name"></span>
     </div>
   </div>
+  <!-- Live score bars (visible to all watchers) -->
+  <div class="arena-live-scorebar" id="arena-live-scorebar">
+    <div class="alb-row">
+      <div class="alb-name" id="alb-p1-name"></div>
+      <div class="alb-bar-wrap"><div class="alb-bar alb-bar-1" id="alb-p1-bar" style="width:0%"><span id="alb-p1-score">0</span></div></div>
+    </div>
+    <div class="alb-row">
+      <div class="alb-name" id="alb-p2-name"></div>
+      <div class="alb-bar-wrap"><div class="alb-bar alb-bar-2" id="alb-p2-bar" style="width:0%"><span id="alb-p2-score">0</span></div></div>
+    </div>
+  </div>
   <div id="arena-puzzle-area" class="puzzle-area arena-puzzle-area"></div>
   <div id="arena-watch-overlay" class="arena-watch-overlay" style="display:none">
     <div class="watch-title">👁 WATCHING THE ARENA</div>
@@ -219,15 +229,54 @@
   </div>
 </div>
 
+<!-- =============== SPECTATOR =============== -->
+<div id="screen-spectator" class="screen">
+  <div class="spec-header">
+    <div class="spec-title">👁 SPECTATING</div>
+    <div class="spec-round" id="spec-round">ROUND 1</div>
+    <div class="spec-phase" id="spec-phase"></div>
+    <div class="spec-watching-label" id="spec-watching-label"></div>
+  </div>
+  <div class="spec-body">
+    <div class="spec-left">
+      <div class="spec-section-title">LEADERBOARD</div>
+      <div id="spec-leaderboard" class="spec-leaderboard"></div>
+      <div class="spec-section-title" style="margin-top:1rem">WATCH A PLAYER</div>
+      <div id="spec-watch-list" class="spec-watch-list"></div>
+    </div>
+    <div class="spec-right">
+      <div id="spec-arena-live" class="spec-arena-live" style="display:none">
+        <div class="spec-section-title">⚔ ARENA — LIVE SCORES</div>
+        <div id="spec-arena-bars" class="spec-arena-bars-wrap"></div>
+      </div>
+      <div class="spec-section-title" style="margin-top:.5rem">ROUND HISTORY</div>
+      <div id="spec-history" class="spec-history"></div>
+    </div>
+  </div>
+</div>
+
 <!-- =============== GAME OVER =============== -->
 <div id="screen-game-over" class="screen game-over-screen">
-  <div class="fireworks"></div>
   <div class="go-content">
     <div class="go-title">🏆 CHAMPION 🏆</div>
     <div class="go-winner" id="go-winner"></div>
     <div class="go-sub">WINNER OF THE CHALLENGE</div>
     <div class="go-eliminated" id="go-eliminated"></div>
     <button class="btn btn-primary btn-xl" id="btn-play-again">PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- =============== ELIMINATION CHOICE MODAL =============== -->
+<div id="elim-choice-modal" class="modal-overlay" style="display:none">
+  <div class="modal-card">
+    <div class="modal-icon">💀</div>
+    <div class="modal-title">YOU'VE BEEN<br/>ELIMINATED</div>
+    <div class="modal-name" id="ecm-name"></div>
+    <div class="modal-sub">What do you want to do?</div>
+    <div class="modal-buttons">
+      <button class="btn btn-spectate" id="btn-spectate">👁 SPECTATE THE GAME</button>
+      <button class="btn btn-leave" id="btn-leave-game">🚪 LEAVE</button>
+    </div>
   </div>
 </div>
 
