@@ -50,6 +50,8 @@ const DAILY_POOL = [
   'curling',      // Curling
   'jumprope',     // Jump Rope
   'minesweeper',  // Minesweeper Light
+  'tangram',      // Tangram
+  'colormatch',   // Color Match
 ];
 const ARENA_POOL = [
   'trivia',       // Trivia Showdown
@@ -62,6 +64,7 @@ const ARENA_POOL = [
   'findbomb',     // Find the Bomb
   'mathrace',     // Math Race
   'simonextreme', // Simon Extreme (faster color seq)
+  'tunneldodge',  // Tunnel Dodge
 ];
 
 // ============================================================
@@ -156,6 +159,8 @@ const PUZZLE_NAMES = {
   curling:       '🥌 Curling',
   jumprope:      '🪢 Jump Rope',
   minesweeper:   '💣 Minesweeper',
+  tangram:       '🔷 Tangram',
+  colormatch:    '🎨 Color Match',
   // Arena
   trivia:        '❓ Trivia Showdown',
   reaction:      '⚡ Reaction Test',
@@ -167,6 +172,7 @@ const PUZZLE_NAMES = {
   findbomb:      '💣 Find the Bomb',
   mathrace:      '🏎 Math Race',
   simonextreme:  '🔴 Simon Extreme',
+  tunneldodge:   '🚀 Tunnel Dodge',
 };
 
 function makePuzzle(type) {
@@ -346,6 +352,22 @@ function makePuzzle(type) {
       const seq = Array.from({length:20}, ()=>COLORS[Math.floor(Math.random()*COLORS.length)]);
       return { type, sequence:seq, colors:COLORS, colorHex:COLOR_HEX, speed:'fast' };
     }
+    // ── DAILY: TANGRAM ────────────────────────────────────
+    case 'tangram': {
+      const puzzle = Math.floor(Math.random() * 4); // 4 preset shapes
+      return { type, puzzle };
+    }
+    // ── DAILY: COLOR MATCH ────────────────────────────────
+    case 'colormatch': {
+      const palette = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
+      const grid = [];
+      palette.forEach((_,ci) => { for(let i=0;i<6;i++) grid.push(ci); });
+      return { type, duration: 60000, palette, grid: shuffle(grid) };
+    }
+    // ── ARENA: TUNNEL DODGE ───────────────────────────────
+    case 'tunneldodge': {
+      return { type, duration: 45000, seed: Math.floor(Math.random() * 99999) };
+    }
   }
 }
 
@@ -375,6 +397,9 @@ function calcScore(type, result, ms) {
     case 'findbomb':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
     case 'mathrace':      return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
     case 'simonextreme':  return Math.min(1000, (result.level||0) * 100);
+    case 'tangram':       return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 200)));
+    case 'colormatch':    return Math.min(1000, (result.pairs||0) * 28);
+    case 'tunneldodge':   return Math.min(1000, (result.distance||0) * 4);
     default: return 0;
   }
 }

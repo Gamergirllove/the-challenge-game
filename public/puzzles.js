@@ -998,7 +998,14 @@ window.Puzzles = {
   // ──────────────────────────────────────────────────────────
   minesweeper(container, data, onComplete, onProgress) {
     const startTime = Date.now();
-    const { rows, cols, mines: mineList } = data;
+    const rows = data.H || data.rows || 6;
+    const cols = data.W || data.cols || 6;
+    const mineList = [];
+    if (data.cells) {
+      data.cells.forEach((c,i) => { if(c.mine) mineList.push([Math.floor(i/cols), i%cols]); });
+    } else if (data.mines) {
+      data.mines.forEach(([r,c]) => mineList.push([r,c]));
+    }
     const mineSet = new Set(mineList.map(([r,c])=>`${r},${c}`));
     const revealed = new Set();
     const flagged = new Set();
@@ -1083,48 +1090,50 @@ window.Puzzles = {
   },
 
   // ──────────────────────────────────────────────────────────
-  // ARENA: FIND THE BOMB — click the hidden bomb before time runs out
+  // ARENA: FIND THE BOMB — multi-round bomb hunt
   // ──────────────────────────────────────────────────────────
   findbomb(container, data, onComplete, onProgress) {
     const startTime = Date.now();
-    const { size, bomb, decoys } = data;
-    let clicks = 0, found = false;
-    const emojis = ['📦','🎁','🗃️','📫','🧰','🪣','🧲','🔮','🎲','🃏'];
+    const rounds = data.rounds_data || [];
+    let roundIdx = 0, foundCount = 0;
 
-    container.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:.75rem">
-        <div style="font-family:var(--font-title);font-size:1.8rem;color:var(--red)">💣 FIND THE BOMB!</div>
-        <div style="font-size:.85rem;color:var(--muted)">Click boxes to find the hidden bomb — it could be anywhere!</div>
-        <div id="fb-grid" style="display:grid;grid-template-columns:repeat(${size},1fr);gap:.4rem;width:min(360px,90vw)"></div>
-        <div id="fb-msg" style="font-family:var(--font-title);font-size:1.1rem"></div>
-      </div>`;
-
-    const cells = Array.from({length: size*size}, (_,i)=>i);
-    const shuffled = cells.sort(()=>Math.random()-.5);
-    const bombIdx = shuffled[0];
-    const decoyIdxs = new Set(shuffled.slice(1, decoys+1));
-
-    const grid = container.querySelector('#fb-grid');
-    cells.forEach(i => {
-      const btn = document.createElement('button');
-      btn.style.cssText='padding:.6rem;font-size:1.4rem;border-radius:6px;cursor:pointer;border:none;background:#333;transition:all .15s';
-      btn.textContent='❓';
-      btn.addEventListener('click', ()=>{
-        if(found||btn.disabled) return;
-        btn.disabled=true; clicks++;
-        if(i===bombIdx) {
-          found=true;
-          btn.textContent='💣'; btn.style.background='#c0392b';
-          container.querySelector('#fb-msg').textContent='💥 BOOM! Found it!';
-          if(onProgress) onProgress(Math.max(900 - clicks*30, 100));
-          onComplete({result:{found:1,total:1,clicks},timeMs:Date.now()-startTime});
-        } else {
-          btn.textContent=emojis[i%emojis.length]; btn.style.background='#2a2a4a';
-          container.querySelector('#fb-msg').textContent=`❌ Not here... (${clicks} clicks)`;
-        }
+    function renderRound() {
+      if(roundIdx >= rounds.length) {
+        onComplete({result:{found:foundCount,total:rounds.length},timeMs:Date.now()-startTime});
+        return;
+      }
+      const { grid: cells, size, hint } = rounds[roundIdx];
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem">
+          <div style="font-family:var(--font-title);font-size:1.6rem;color:var(--red)">💣 FIND THE BOMB!</div>
+          <div style="font-size:.8rem;color:var(--muted)">Round ${roundIdx+1}/${rounds.length} · Hint: ${hint}</div>
+          <div id="fb-grid" style="display:grid;grid-template-columns:repeat(${size},1fr);gap:.4rem;width:min(320px,90vw)"></div>
+          <div id="fb-msg" style="font-family:var(--font-title);font-size:1.1rem;min-height:1.5rem"></div>
+        </div>`;
+      const gridEl = container.querySelector('#fb-grid');
+      cells.forEach(cell => {
+        const btn = document.createElement('button');
+        btn.style.cssText='padding:.6rem;font-size:1.4rem;border-radius:6px;cursor:pointer;border:none;background:#333';
+        btn.textContent='❓';
+        btn.addEventListener('click', () => {
+          if(btn.disabled) return;
+          btn.disabled = true;
+          if(cell.isBomb) {
+            btn.textContent='💣'; btn.style.background='#c0392b';
+            container.querySelector('#fb-msg').textContent='💥 Found it!';
+            foundCount++;
+            if(onProgress) onProgress(Math.floor((foundCount/rounds.length)*900));
+            roundIdx++;
+            setTimeout(renderRound, 700);
+          } else {
+            btn.textContent = cell.emoji; btn.style.background='#2a2a4a';
+            container.querySelector('#fb-msg').textContent='❌ Keep looking…';
+          }
+        });
+        gridEl.appendChild(btn);
       });
-      grid.appendChild(btn);
-    });
+    }
+    renderRound();
   },
 
   // ──────────────────────────────────────────────────────────
@@ -1132,7 +1141,7 @@ window.Puzzles = {
   // ──────────────────────────────────────────────────────────
   mathrace(container, data, onComplete, onProgress) {
     const startTime = Date.now();
-    const { problems } = data;
+    const problems = data.questions || data.problems || [];
     let idx = 0, score = 0;
 
     function renderProblem() {
@@ -1141,28 +1150,31 @@ window.Puzzles = {
         return;
       }
       const p = problems[idx];
+      const question = p.q || p.question;
+      const answer = p.a !== undefined ? p.a : p.answer;
       container.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:380px;width:100%">
           <div style="font-family:var(--font-title);font-size:1.6rem;color:var(--gold)">⚡ MATH RACE</div>
           <div style="font-size:.85rem;color:var(--muted)">${idx+1} / ${problems.length}</div>
-          <div style="font-family:var(--font-title);font-size:3rem;color:#fff;letter-spacing:.1em">${p.question}</div>
+          <div style="font-family:var(--font-title);font-size:3rem;color:#fff;letter-spacing:.1em">${question}</div>
           <div id="mr-choices" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;width:100%"></div>
           <div id="mr-feedback" style="font-family:var(--font-title);font-size:1.2rem;min-height:1.5rem"></div>
         </div>`;
       const choicesEl = container.querySelector('#mr-choices');
-      p.choices.forEach(ch => {
+      (p.choices || []).forEach(ch => {
         const btn = document.createElement('button');
         btn.className = 'btn btn-secondary';
         btn.textContent = ch;
         btn.style.fontSize='1.4rem';
         btn.addEventListener('click', ()=>{
-          if(ch === p.answer) {
+          const correct = ch == answer;
+          if(correct) {
             score++;
             btn.style.background='#2ecc71';
             container.querySelector('#mr-feedback').textContent='✅ Correct!';
           } else {
             btn.style.background='#c0392b';
-            container.querySelector('#mr-feedback').textContent=`❌ It was ${p.answer}`;
+            container.querySelector('#mr-feedback').textContent=`❌ It was ${answer}`;
           }
           if(onProgress) onProgress(Math.floor((score/problems.length)*900));
           idx++;
@@ -1180,14 +1192,18 @@ window.Puzzles = {
   simonextreme(container, data, onComplete, onProgress) {
     const startTime = Date.now();
     const { sequence } = data;
-    const COLORS = [
-      {id:'R',label:'🔴',bg:'#e74c3c',lit:'#ff6b6b'},
-      {id:'G',label:'🟢',bg:'#2ecc71',lit:'#55ff99'},
-      {id:'B',label:'🔵',bg:'#3498db',lit:'#5dade2'},
-      {id:'Y',label:'🟡',bg:'#f1c40f',lit:'#ffee55'},
-      {id:'P',label:'🟣',bg:'#9b59b6',lit:'#c39bd3'},
-      {id:'O',label:'🟠',bg:'#e67e22',lit:'#ff9f4a'},
-    ];
+    const colorHex = data.colorHex || {RED:'#e74c3c',BLUE:'#3498db',GREEN:'#2ecc71',YELLOW:'#f1c40f',PURPLE:'#9b59b6'};
+    const colorEmoji = {RED:'🔴',BLUE:'🔵',GREEN:'🟢',YELLOW:'🟡',PURPLE:'🟣',
+                        R:'🔴',G:'🟢',B:'🔵',Y:'🟡',P:'🟣',O:'🟠'};
+    const colorLit = {RED:'#ff8888',BLUE:'#88aaff',GREEN:'#88ff88',YELLOW:'#ffff88',PURPLE:'#dd88ff',
+                      R:'#ff6b6b',G:'#55ff99',B:'#5dade2',Y:'#ffee55',P:'#c39bd3',O:'#ff9f4a'};
+    const colorNames = data.colors || Object.keys(colorHex);
+    const COLORS = colorNames.map(name => ({
+      id: name,
+      label: colorEmoji[name] || name,
+      bg: colorHex[name] || '#666',
+      lit: colorLit[name] || '#fff',
+    }));
     let step = 0, playerIdx = 0, showing = false;
 
     container.innerHTML = `
@@ -1253,6 +1269,382 @@ window.Puzzles = {
     }
 
     setTimeout(()=>playSequence(), 500);
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // DAILY: TANGRAM — drag & rotate pieces to fill silhouette
+  // Challenge.io themed: dark bg, neon pieces, gold target
+  // ──────────────────────────────────────────────────────────
+  tangram(container, data, onComplete, onProgress) {
+    const startTime = Date.now();
+    const CW = 290, CH = 260;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.4rem">
+        <div style="font-family:var(--font-title);font-size:1.5rem;color:var(--gold)">🔷 TANGRAM</div>
+        <div style="font-size:.75rem;color:var(--muted)">Drag pieces · Double-click or right-click to rotate</div>
+        <canvas id="tg-c" width="${CW}" height="${CH}" style="border-radius:8px;background:#0a0a1a;cursor:crosshair;touch-action:none;max-width:100%"></canvas>
+        <div id="tg-pct" style="font-family:var(--font-title);font-size:.95rem;color:var(--gold)">0% COVERED</div>
+      </div>`;
+
+    const canvas = container.querySelector('#tg-c');
+    const ctx = canvas.getContext('2d');
+    const S = 50; // unit in pixels
+
+    // 4 target silhouettes (all have area = 8S²)
+    const TARGETS = [
+      // Square ~141×141 centered
+      [[75,60],[216,60],[216,201],[75,201]],
+      // Right triangle legs=200
+      [[50,220],[250,220],[50,20]],
+      // Rectangle 100×200
+      [[95,30],[195,30],[195,230],[95,230]],
+      // Parallelogram base 200 h 100
+      [[40,190],[240,190],[280,90],[80,90]],
+    ];
+    const target = TARGETS[(data.puzzle||0) % TARGETS.length];
+
+    // Piece vertex templates (relative to centroid)
+    const LT=S*2/3, MT=S*Math.SQRT2/3, ST=S/3;
+    let pieces = [
+      {id:0,color:'#e74c3c',verts:[[-2*LT,-2*LT],[4*LT,-2*LT],[-2*LT,4*LT]],x:40,  y:55, angle:0},
+      {id:1,color:'#3498db',verts:[[-2*LT,-2*LT],[4*LT,-2*LT],[-2*LT,4*LT]],x:148, y:55, angle:Math.PI/2},
+      {id:2,color:'#2ecc71',verts:[[-2*MT,-2*MT],[4*MT,-2*MT],[-2*MT,4*MT]],x:250, y:55, angle:0},
+      {id:3,color:'#f1c40f',verts:[[-2*ST,-2*ST],[4*ST,-2*ST],[-2*ST,4*ST]],x:55,  y:210,angle:0},
+      {id:4,color:'#9b59b6',verts:[[-2*ST,-2*ST],[4*ST,-2*ST],[-2*ST,4*ST]],x:130, y:210,angle:Math.PI/2},
+      {id:5,color:'#e67e22',verts:[[-S/2,-S/2],[S/2,-S/2],[S/2,S/2],[-S/2,S/2]],x:190,y:215,angle:Math.PI/4},
+      {id:6,color:'#1abc9c',verts:[[-S,-S/2],[0,-S/2],[S/2,S/2],[-S/2,S/2]],x:255,y:210,angle:0},
+    ];
+
+    let dragging=null, dragOX=0, dragOY=0, solved=false;
+
+    function worldVerts(p) {
+      const c=Math.cos(p.angle), s=Math.sin(p.angle);
+      return p.verts.map(([vx,vy])=>[p.x+vx*c-vy*s, p.y+vx*s+vy*c]);
+    }
+
+    function inPoly(px,py,verts) {
+      let inside=false;
+      for(let i=0,j=verts.length-1;i<verts.length;j=i++) {
+        const [xi,yi]=verts[i],[xj,yj]=verts[j];
+        if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside;
+      }
+      return inside;
+    }
+
+    function draw() {
+      ctx.clearRect(0,0,CW,CH);
+      // target
+      ctx.save();
+      ctx.fillStyle='rgba(255,170,0,0.13)';
+      ctx.strokeStyle='rgba(255,170,0,0.6)';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      target.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      // pieces
+      pieces.forEach(p=>{
+        const wv=worldVerts(p);
+        ctx.save();
+        ctx.fillStyle=p===dragging?p.color+'aa':p.color;
+        ctx.strokeStyle='rgba(255,255,255,0.7)';
+        ctx.lineWidth=1.5;
+        ctx.shadowColor=p.color; ctx.shadowBlur=p===dragging?12:4;
+        ctx.beginPath();
+        wv.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function checkCoverage() {
+      if(solved) return;
+      // Draw target in pure red on offscreen canvas
+      const ofcT=document.createElement('canvas'); ofcT.width=CW; ofcT.height=CH;
+      const tctx=ofcT.getContext('2d');
+      tctx.fillStyle='#ff0000';
+      tctx.beginPath();
+      target.forEach(([x,y],i)=>i?tctx.lineTo(x,y):tctx.moveTo(x,y));
+      tctx.closePath(); tctx.fill();
+      const td=tctx.getImageData(0,0,CW,CH).data;
+      let totalTarget=0;
+      for(let i=0;i<td.length;i+=4) if(td[i]>200) totalTarget++;
+      // Draw target then pieces in black
+      tctx.fillStyle='#000000';
+      pieces.forEach(p=>{
+        const wv=worldVerts(p);
+        tctx.beginPath();
+        wv.forEach(([x,y],i)=>i?tctx.lineTo(x,y):tctx.moveTo(x,y));
+        tctx.closePath(); tctx.fill();
+      });
+      const d=tctx.getImageData(0,0,CW,CH).data;
+      let remaining=0;
+      for(let i=0;i<d.length;i+=4) if(d[i]>200) remaining++;
+      const pct=totalTarget>0?Math.round((1-remaining/totalTarget)*100):0;
+      if(onProgress) onProgress(Math.min(900,pct*9));
+      const el=container.querySelector('#tg-pct');
+      if(el) el.textContent=`${pct}% COVERED`;
+      if(pct>=85&&!solved){ solved=true; onComplete({result:{},timeMs:Date.now()-startTime}); }
+    }
+
+    function canvasPos(e) {
+      const r=canvas.getBoundingClientRect();
+      const sx=CW/r.width, sy=CH/r.height;
+      const src=e.touches?e.touches[0]:e;
+      return [(src.clientX-r.left)*sx,(src.clientY-r.top)*sy];
+    }
+
+    canvas.addEventListener('mousedown',e=>{
+      const [mx,my]=canvasPos(e);
+      for(let i=pieces.length-1;i>=0;i--) {
+        if(inPoly(mx,my,worldVerts(pieces[i]))){
+          dragging=pieces[i]; pieces.splice(i,1); pieces.push(dragging);
+          dragOX=mx-dragging.x; dragOY=my-dragging.y; draw(); break;
+        }
+      }
+    });
+    canvas.addEventListener('mousemove',e=>{
+      if(!dragging) return;
+      const [mx,my]=canvasPos(e);
+      dragging.x=mx-dragOX; dragging.y=my-dragOY; draw();
+    });
+    canvas.addEventListener('mouseup',()=>{ dragging=null; checkCoverage(); draw(); });
+    canvas.addEventListener('dblclick',e=>{
+      const [mx,my]=canvasPos(e);
+      for(let i=pieces.length-1;i>=0;i--) {
+        if(inPoly(mx,my,worldVerts(pieces[i]))){ pieces[i].angle+=Math.PI/4; draw(); checkCoverage(); break; }
+      }
+    });
+    canvas.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      const [mx,my]=canvasPos(e);
+      for(let i=pieces.length-1;i>=0;i--) {
+        if(inPoly(mx,my,worldVerts(pieces[i]))){ pieces[i].angle-=Math.PI/4; draw(); checkCoverage(); break; }
+      }
+    });
+    canvas.addEventListener('touchstart',e=>{
+      e.preventDefault();
+      const [mx,my]=canvasPos(e);
+      for(let i=pieces.length-1;i>=0;i--) {
+        if(inPoly(mx,my,worldVerts(pieces[i]))){
+          dragging=pieces[i]; pieces.splice(i,1); pieces.push(dragging);
+          dragOX=mx-dragging.x; dragOY=my-dragging.y; draw(); break;
+        }
+      }
+    },{passive:false});
+    canvas.addEventListener('touchmove',e=>{ e.preventDefault(); if(!dragging)return; const [mx,my]=canvasPos(e); dragging.x=mx-dragOX; dragging.y=my-dragOY; draw(); },{passive:false});
+    canvas.addEventListener('touchend',()=>{ dragging=null; checkCoverage(); draw(); });
+
+    draw();
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // DAILY: COLOR MATCH — match color pairs in 60 seconds
+  // ──────────────────────────────────────────────────────────
+  colormatch(container, data, onComplete, onProgress) {
+    const startTime = Date.now();
+    const duration = data.duration || 60000;
+    const palette = data.palette || ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
+    const COLS = 6;
+    let grid = [...(data.grid||[])];
+    if(!grid.length){ for(let c=0;c<palette.length;c++) for(let i=0;i<COLS;i++) grid.push(c); grid=grid.sort(()=>Math.random()-.5); }
+    let pairs = 0, selected = -1, locked = false, done = false;
+
+    function render() {
+      const remaining = Math.max(0, Math.round((duration - (Date.now()-startTime))/1000));
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem">
+          <div style="font-family:var(--font-title);font-size:1.5rem;color:var(--gold)">🎨 COLOR MATCH</div>
+          <div style="display:flex;justify-content:space-between;width:280px">
+            <span style="font-family:var(--font-title);color:var(--gold)">⏱ ${remaining}s</span>
+            <span style="font-family:var(--font-title);color:#2ecc71">✅ ${pairs} pairs</span>
+          </div>
+          <div id="cm-grid" style="display:grid;grid-template-columns:repeat(${COLS},1fr);gap:4px;width:min(290px,90vw)"></div>
+        </div>`;
+      const gridEl = container.querySelector('#cm-grid');
+      grid.forEach((colorIdx,i) => {
+        const cell = document.createElement('div');
+        if(colorIdx === -1) { cell.style.cssText='height:40px;border-radius:6px;background:transparent'; }
+        else {
+          cell.style.cssText=`height:40px;border-radius:6px;cursor:pointer;background:${palette[colorIdx]};transition:transform .1s,box-shadow .1s;${i===selected?'transform:scale(1.15);box-shadow:0 0 12px #fff':''}`;
+          cell.addEventListener('click',()=>{
+            if(locked||done||grid[i]===-1) return;
+            if(selected===-1) { selected=i; render(); return; }
+            if(selected===i) { selected=-1; render(); return; }
+            if(grid[i]===grid[selected]) {
+              // match!
+              const a=selected, b=i;
+              selected=-1; locked=true;
+              grid[a]=-1; grid[b]=-1;
+              pairs++;
+              if(onProgress) onProgress(Math.min(900,pairs*28));
+              render();
+              locked=false;
+              if(grid.every(c=>c===-1)){ done=true; onComplete({result:{pairs},timeMs:Date.now()-startTime}); }
+            } else {
+              const prev=selected; selected=-1;
+              render();
+              // flash wrong
+              const prevCell=container.querySelector('#cm-grid')?.children[prev];
+              const curCell=container.querySelector('#cm-grid')?.children[i];
+              if(prevCell) prevCell.style.filter='brightness(2)';
+              if(curCell)  curCell.style.filter='brightness(2)';
+              setTimeout(()=>render(),400);
+            }
+          });
+        }
+        gridEl.appendChild(cell);
+      });
+    }
+
+    render();
+    const tick = setInterval(()=>{ if(done) return; render(); },1000);
+    setTimeout(()=>{
+      clearInterval(tick);
+      if(!done){ done=true; onComplete({result:{pairs},timeMs:Date.now()-startTime}); }
+    }, duration);
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // ARENA: TUNNEL DODGE — 3-lane tunnel, dodge obstacles
+  // ──────────────────────────────────────────────────────────
+  tunneldodge(container, data, onComplete, onProgress) {
+    const startTime = Date.now();
+    const duration = data.duration || 45000;
+    const CW = 300, CH = 240;
+    let lane = 1; // 0=left 1=center 2=right
+    let distance = 0, alive = true, animId, spawnT = 0;
+    const obstacles = []; // {lane, z}
+    const SPEED = 0.018, SPAWN_INTERVAL = 55, DEPTH = 40;
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem">
+        <div style="font-family:var(--font-title);font-size:1.5rem;color:var(--red)">🚀 TUNNEL DODGE</div>
+        <div style="font-size:.75rem;color:var(--muted)">← → keys or buttons to dodge!</div>
+        <canvas id="td-c" width="${CW}" height="${CH}" style="border-radius:8px;background:#050510;max-width:100%"></canvas>
+        <div style="display:flex;gap:.5rem">
+          <button id="td-l" class="btn btn-secondary" style="flex:1;font-size:1.2rem">◀</button>
+          <button id="td-r" class="btn btn-secondary" style="flex:1;font-size:1.2rem">▶</button>
+        </div>
+        <div id="td-dist" style="font-family:var(--font-title);color:var(--gold)">0 m</div>
+      </div>`;
+
+    const canvas = container.querySelector('#td-c');
+    const ctx = canvas.getContext('2d');
+
+    function moveLeft(){ if(lane>0) lane--; }
+    function moveRight(){ if(lane<2) lane++; }
+    container.querySelector('#td-l').addEventListener('click',moveLeft);
+    container.querySelector('#td-r').addEventListener('click',moveRight);
+    const onKey = e=>{ if(e.key==='ArrowLeft')moveLeft(); if(e.key==='ArrowRight')moveRight(); };
+    document.addEventListener('keydown',onKey);
+
+    // Seeded random for consistent obstacles between players
+    let rseed = data.seed || 12345;
+    function rand(){ rseed=(rseed*16807+0)%2147483647; return rseed/2147483647; }
+
+    function project(worldZ, laneX) {
+      // Perspective projection: z=0 = far, z=1 = near
+      const scale = 0.15 + worldZ * 0.85;
+      const cx = CW/2, cy = CH*0.45;
+      const laneOffset = (laneX - 1) * CW * 0.28;
+      const px = cx + laneOffset * scale;
+      const py = cy + (worldZ - 0.5) * CH * 0.9;
+      return {px, py, scale};
+    }
+
+    let frame = 0;
+    function loop() {
+      if(!alive) return;
+      frame++;
+      distance++;
+      spawnT++;
+      if(spawnT >= SPAWN_INTERVAL) {
+        spawnT = 0;
+        const bl = Math.floor(rand()*3);
+        obstacles.push({lane: bl, z: 0});
+      }
+      // Move obstacles toward player
+      for(let i=obstacles.length-1;i>=0;i--) {
+        obstacles[i].z += SPEED + distance*0.000008;
+        if(obstacles[i].z > 1.05) { obstacles.splice(i,1); continue; }
+        // Collision check: z near 1 and same lane
+        if(obstacles[i].z > 0.88 && obstacles[i].lane === lane) {
+          alive = false;
+          ctx.fillStyle='rgba(200,0,0,0.6)';
+          ctx.fillRect(0,0,CW,CH);
+          ctx.font='bold 28px Bebas Neue,sans-serif';
+          ctx.fillStyle='#fff';
+          ctx.textAlign='center';
+          ctx.fillText('CRASH!', CW/2, CH/2);
+          document.removeEventListener('keydown',onKey);
+          setTimeout(()=>{ cancelAnimationFrame(animId); onComplete({result:{distance:Math.floor(distance/10)},timeMs:Date.now()-startTime}); },800);
+          return;
+        }
+      }
+
+      // Draw
+      ctx.clearRect(0,0,CW,CH);
+      // Tunnel walls (perspective lines)
+      ctx.strokeStyle='rgba(255,60,60,0.3)';
+      ctx.lineWidth=1;
+      for(let l=0;l<=3;l++) {
+        const fx=(l/3)*CW, tx=CW*0.2+(l/3)*CW*0.6;
+        ctx.beginPath(); ctx.moveTo(tx,CH*0.45); ctx.lineTo(fx,CH); ctx.stroke();
+      }
+      for(let d=0;d<8;d++) {
+        const z=((frame*SPEED*60+d*0.15)%1);
+        const y=CH*0.45+(z-0.5)*CH*0.9;
+        if(y<CH*0.45||y>CH) continue;
+        const w=CW*(0.15+z*0.85);
+        ctx.strokeStyle=`rgba(255,60,60,${z*0.25})`;
+        ctx.beginPath(); ctx.rect(CW/2-w/2, y-2, w, 4); ctx.stroke();
+      }
+      // Draw obstacles
+      obstacles.forEach(ob=>{
+        const {px,py,scale}=project(ob.z, ob.lane);
+        const sz = 18*scale;
+        ctx.fillStyle=`rgba(255,80,80,${0.4+ob.z*0.6})`;
+        ctx.strokeStyle='#ff4444';
+        ctx.lineWidth=2*scale;
+        ctx.beginPath();
+        ctx.moveTo(px, py-sz); ctx.lineTo(px+sz*0.8, py+sz*0.5);
+        ctx.lineTo(px-sz*0.8, py+sz*0.5); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      });
+      // Draw player ship
+      const playerX = CW*0.17 + lane*CW*0.33;
+      const playerY = CH - 30;
+      ctx.fillStyle='#e74c3c';
+      ctx.shadowColor='#e74c3c'; ctx.shadowBlur=15;
+      ctx.beginPath();
+      ctx.moveTo(playerX,playerY-18); ctx.lineTo(playerX+14,playerY+10);
+      ctx.lineTo(playerX,playerY+4); ctx.lineTo(playerX-14,playerY+10);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur=0;
+      // Lane indicators
+      [0,1,2].forEach(l=>{
+        const lx=CW*0.17+l*CW*0.33;
+        ctx.strokeStyle=l===lane?'rgba(255,170,0,0.6)':'rgba(255,255,255,0.1)';
+        ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(lx,CH*0.45); ctx.lineTo(lx,CH-10); ctx.stroke();
+      });
+      // Distance
+      const distEl=container.querySelector('#td-dist');
+      if(distEl) distEl.textContent=`${Math.floor(distance/10)} m`;
+      if(onProgress) onProgress(Math.min(900,Math.floor(distance/10)*4));
+
+      animId=requestAnimationFrame(loop);
+    }
+    animId=requestAnimationFrame(loop);
+
+    setTimeout(()=>{
+      if(!alive) return;
+      alive=false;
+      cancelAnimationFrame(animId);
+      document.removeEventListener('keydown',onKey);
+      onComplete({result:{distance:Math.floor(distance/10)},timeMs:Date.now()-startTime});
+    }, duration);
   },
 
 };
