@@ -186,12 +186,13 @@ function renderLobby(state) {
   if (!grid) return;
   grid.innerHTML = '';
   state.players.forEach(p => {
+    const wins = p.wins || 0;
     const card = document.createElement('div');
-    card.className = 'player-card anim-pop-in';
+    card.className = 'lobby-player-card anim-pop-in' + (p.isHost ? ' is-host' : '');
     card.innerHTML = `
-      <div class="player-card-name">${escHtml(p.name)}</div>
-      ${p.isHost ? `<div class="player-card-badge">⭐ HOST</div>` : ''}
-      ${p.id === myId ? `<div class="player-card-badge" style="color:var(--blue)">← YOU</div>` : ''}`;
+      ${renderShirt(wins, 48, true)}
+      <div class="lobby-player-name">${escHtml(p.name)}${p.id === myId ? ' <span style="color:var(--blue);font-size:.7rem">(YOU)</span>' : ''}</div>
+      ${p.isHost ? `<div class="lobby-player-host-badge">⭐ HOST</div>` : ''}`;
     grid.appendChild(card);
   });
   const cnt = state.players.length;
@@ -609,3 +610,207 @@ socket.on('player:left', ({ name }) => {
 // ── Helpers ────────────────────────────────────────────────
 function rankIcon(rank) { return rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank; }
 function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ============================================================
+//  SHIRT AVATAR
+// ============================================================
+const SHIRT_TIERS = [
+  { min:0,  max:0,  fill:'#636e72', stroke:'#555',    label:'ROOKIE',   glow:null },
+  { min:1,  max:2,  fill:'#cd7f32', stroke:'#a0622a', label:'BRONZE',   glow:null },
+  { min:3,  max:5,  fill:'#bdc3c7', stroke:'#8a9399', label:'SILVER',   glow:'#bdc3c7' },
+  { min:6,  max:9,  fill:'#f1c40f', stroke:'#c9a20c', label:'GOLD',     glow:'#f1c40f' },
+  { min:10, max:Infinity, fill:'gradient', stroke:'#b7791f', label:'CHAMPION', glow:'#ffd700' },
+];
+function getShirtTier(wins) {
+  return SHIRT_TIERS.find(t => wins >= t.min && wins <= t.max) || SHIRT_TIERS[0];
+}
+function renderShirtSVG(wins = 0, size = 52) {
+  const tier = getShirtTier(wins);
+  const uid = Math.random().toString(36).slice(2, 8);
+  const isChamp = tier.fill === 'gradient';
+  const gradDef = isChamp ? `
+    <defs>
+      <linearGradient id="sg${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#fffde7"/>
+        <stop offset="45%"  stop-color="#ffd700"/>
+        <stop offset="100%" stop-color="#f57f17"/>
+      </linearGradient>
+    </defs>` : '';
+  const fillVal = isChamp ? `url(#sg${uid})` : tier.fill;
+  const glowFilter = tier.glow ? `filter:drop-shadow(0 0 6px ${tier.glow}88)` : '';
+  // T-shirt silhouette path in 100×100 viewBox
+  const shirtPath = 'M18,3 L26,15 Q37,20 50,22 Q63,20 74,15 L82,3 L100,22 L78,34 L78,98 L22,98 L22,34 L0,22 Z';
+  // Collar fold lines
+  const collarLeft  = 'M26,15 Q37,22 50,24';
+  const collarRight = 'M74,15 Q63,22 50,24';
+  const winsLabel = wins > 0
+    ? `<text x="50" y="${isChamp?63:65}" text-anchor="middle" font-size="${wins>=10?14:16}" font-weight="700"
+         font-family="Bebas Neue,sans-serif" fill="${isChamp?'#7b4f00':'rgba(255,255,255,0.85)'}">${wins}</text>`
+    : '';
+  const champStar = isChamp
+    ? `<text x="50" y="48" text-anchor="middle" font-size="18" fill="#b7791f">★</text>` : '';
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"
+    style="${glowFilter}">
+    ${gradDef}
+    <path d="${shirtPath}" fill="${fillVal}" stroke="${tier.stroke}" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="${collarLeft}"  fill="none" stroke="${tier.stroke}" stroke-width="1.2" opacity=".5"/>
+    <path d="${collarRight}" fill="none" stroke="${tier.stroke}" stroke-width="1.2" opacity=".5"/>
+    ${champStar}${winsLabel}
+  </svg>`;
+}
+function renderShirt(wins = 0, size = 52, showLabel = true) {
+  const tier = getShirtTier(wins);
+  return `<div class="shirt-wrap">
+    ${renderShirtSVG(wins, size)}
+    ${showLabel ? `<div class="shirt-tier-label" style="color:${tier.glow||'#888'}">${tier.label}</div>` : ''}
+  </div>`;
+}
+
+// ============================================================
+//  AUTH + USER SESSION
+// ============================================================
+let currentUser = null; // { userId, name, wins, totalGames }
+
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem('cio_user') || 'null'); } catch { return null; }
+}
+function saveSession(user) {
+  localStorage.setItem('cio_user', JSON.stringify(user));
+}
+function clearSession() {
+  localStorage.removeItem('cio_user');
+}
+
+function applyUser(user) {
+  currentUser = user;
+  // Pre-fill name in landing screen
+  if (user?.name) {
+    const nameInput = $('landing-name');
+    if (nameInput) nameInput.value = user.name;
+  }
+  // Show identity bar
+  const bar = $('player-identity');
+  if (bar && user) {
+    bar.style.display = 'flex';
+    $('identity-name').textContent = user.name;
+    $('identity-stats').textContent = `${user.wins} WIN${user.wins !== 1 ? 'S' : ''} · ${user.totalGames} GAMES`;
+    $('identity-shirt').innerHTML = renderShirtSVG(user.wins, 44);
+  }
+  // Send identity to server
+  if (user?.userId) socket.emit('identify', { userId: user.userId });
+}
+
+function showAuthError(msg) {
+  const el = $('auth-error');
+  if (el) { el.textContent = msg; setTimeout(() => { el.textContent = ''; }, 4000); }
+}
+
+// Tab switching
+$('tab-login').addEventListener('click', () => {
+  $('form-login').style.display = 'flex';
+  $('form-register').style.display = 'none';
+  $('tab-login').classList.add('auth-tab-active');
+  $('tab-register').classList.remove('auth-tab-active');
+});
+$('tab-register').addEventListener('click', () => {
+  $('form-login').style.display = 'none';
+  $('form-register').style.display = 'flex';
+  $('tab-register').classList.add('auth-tab-active');
+  $('tab-login').classList.remove('auth-tab-active');
+});
+
+// Login
+$('btn-do-login').addEventListener('click', async () => {
+  const email = $('auth-email').value.trim();
+  const password = $('auth-password').value;
+  if (!email || !password) return showAuthError('Enter email and password.');
+  $('btn-do-login').disabled = true;
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showAuthError(data.error || 'Login failed'); return; }
+    saveSession(data);
+    applyUser(data);
+    showScreen('screen-landing');
+  } catch { showAuthError('Connection error. Try again.'); }
+  finally { $('btn-do-login').disabled = false; }
+});
+
+// Register
+$('btn-do-register').addEventListener('click', async () => {
+  const name     = $('reg-name').value.trim();
+  const email    = $('reg-email').value.trim();
+  const password = $('reg-password').value;
+  if (!name || !email || !password) return showAuthError('All fields required.');
+  if (password.length < 6) return showAuthError('Password must be 6+ characters.');
+  $('btn-do-register').disabled = true;
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showAuthError(data.error || 'Registration failed'); return; }
+    saveSession(data);
+    applyUser(data);
+    showScreen('screen-landing');
+  } catch { showAuthError('Connection error. Try again.'); }
+  finally { $('btn-do-register').disabled = false; }
+});
+
+// Guest
+$('btn-guest').addEventListener('click', () => {
+  currentUser = null;
+  showScreen('screen-landing');
+});
+
+// Logout
+$('btn-logout').addEventListener('click', () => {
+  clearSession();
+  currentUser = null;
+  $('player-identity').style.display = 'none';
+  showScreen('screen-auth');
+});
+
+// ============================================================
+//  LEADERBOARD
+// ============================================================
+$('btn-leaderboard').addEventListener('click', () => showLeaderboard());
+$('btn-lb-back').addEventListener('click', () => showScreen('screen-landing'));
+
+async function showLeaderboard() {
+  showScreen('screen-leaderboard');
+  const list = $('lb-list');
+  list.innerHTML = `<div class="lb-empty">Loading…</div>`;
+  try {
+    const res = await fetch('/api/leaderboard');
+    const board = await res.json();
+    if (!board.length) { list.innerHTML = `<div class="lb-empty">No champions yet — be the first! 🏆</div>`; return; }
+    list.innerHTML = board.map((p, i) => {
+      const rank = i + 1;
+      const rowClass = rank === 1 ? 'lb-top1' : rank === 2 ? 'lb-top2' : rank === 3 ? 'lb-top3' : '';
+      const rankIcon2 = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+      const winRate = p.totalGames > 0 ? Math.round((p.wins / p.totalGames) * 100) : 0;
+      return `<div class="lb-row ${rowClass}">
+        <div class="lb-rank">${rankIcon2}</div>
+        ${renderShirtSVG(p.wins, 40)}
+        <div class="lb-name">${escHtml(p.name)}</div>
+        <div class="lb-wins">🏆 ${p.wins}</div>
+        <div class="lb-games">${p.totalGames} games<br>${winRate}% win rate</div>
+      </div>`;
+    }).join('');
+  } catch { list.innerHTML = `<div class="lb-empty">Could not load leaderboard.</div>`; }
+}
+
+// ── Boot sequence ────────────────────────────────────────────
+(function boot() {
+  const saved = loadSession();
+  if (saved?.userId) {
+    applyUser(saved);
+    showScreen('screen-landing');
+  }
+  // screen-auth is default active — stays if no session
+})();

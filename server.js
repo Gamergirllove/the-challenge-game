@@ -2,12 +2,91 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs   = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+
+// ============================================================
+// USER PERSISTENCE
+// ============================================================
+const DATA_DIR  = path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'users.json');
+
+function loadDB() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(DATA_FILE)) return { users: {} };
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  } catch (e) { return { users: {} }; }
+}
+function saveDB(db) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+  } catch (e) { console.error('DB save error:', e); }
+}
+function hashPw(pw) {
+  return crypto.createHash('sha256').update(pw + 'cio_s4lt_2024').digest('hex');
+}
+function genId() { return crypto.randomBytes(10).toString('hex'); }
+
+// ── REST Auth ────────────────────────────────────────────────
+app.post('/auth/register', (req, res) => {
+  const { name, email, password } = req.body || {};
+  if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be 6+ characters' });
+  const db = loadDB();
+  const existing = Object.values(db.users).find(u => u.email === email.toLowerCase().trim());
+  if (existing) return res.status(409).json({ error: 'Email already registered' });
+  const userId = genId();
+  db.users[userId] = {
+    name: name.trim().slice(0, 20),
+    email: email.toLowerCase().trim(),
+    passwordHash: hashPw(password),
+    wins: 0, totalGames: 0,
+    createdAt: new Date().toISOString(),
+  };
+  saveDB(db);
+  const u = db.users[userId];
+  res.json({ userId, name: u.name, wins: u.wins, totalGames: u.totalGames });
+});
+
+app.post('/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  const db = loadDB();
+  const entry = Object.entries(db.users).find(([,u]) => u.email === email.toLowerCase().trim());
+  if (!entry || entry[1].passwordHash !== hashPw(password))
+    return res.status(401).json({ error: 'Invalid email or password' });
+  const [userId, u] = entry;
+  res.json({ userId, name: u.name, wins: u.wins, totalGames: u.totalGames });
+});
+
+app.get('/api/leaderboard', (_req, res) => {
+  const db = loadDB();
+  const board = Object.entries(db.users)
+    .map(([, u]) => ({ name: u.name, wins: u.wins, totalGames: u.totalGames }))
+    .sort((a, b) => b.wins - a.wins || b.totalGames - a.totalGames)
+    .slice(0, 100);
+  res.json(board);
+});
+
+function recordWin(userId) {
+  if (!userId) return;
+  const db = loadDB();
+  if (db.users[userId]) { db.users[userId].wins++; saveDB(db); }
+}
+function recordGame(userId) {
+  if (!userId) return;
+  const db = loadDB();
+  if (db.users[userId]) { db.users[userId].totalGames++; saveDB(db); }
+}
 
 // ============================================================
 // CONSTANTS
@@ -414,7 +493,7 @@ function genCode() {
   let c = ''; for (let i=0;i<6;i++) c += chars[Math.floor(Math.random()*chars.length)]; return c;
 }
 
-function createRoom(hostId, hostName) {
+function createRoom(hostId, hostName, hostWins=0) {
   let code; do { code = genCode(); } while (rooms[code]);
   rooms[code] = {
     code, host: hostId, phase: PHASE.LOBBY,
@@ -427,12 +506,12 @@ function createRoom(hostId, hostName) {
     chatHistory: [], eliminated: [], roundHistory: [],
     timer: null, tickInterval: null,
   };
-  addPlayer(code, hostId, hostName, true);
+  addPlayer(code, hostId, hostName, true, hostWins);
   return code;
 }
 
-function addPlayer(code, id, name, isHost=false) {
-  rooms[code].players[id] = { id, name, isHost, alive:true, totalScore:0, roundScore:0, finished:false };
+function addPlayer(code, id, name, isHost=false, wins=0) {
+  rooms[code].players[id] = { id, name, isHost, alive:true, totalScore:0, roundScore:0, finished:false, wins };
 }
 
 function alive(code) {
@@ -463,7 +542,7 @@ function roomState(code) {
   const r = rooms[code]; if (!r) return null;
   return {
     code: r.code, phase: r.phase, round: r.round, host: r.host,
-    players: alive(code).map(p => ({ id:p.id, name:p.name, isHost:p.isHost, totalScore:p.totalScore })),
+    players: alive(code).map(p => ({ id:p.id, name:p.name, isHost:p.isHost, totalScore:p.totalScore, wins:p.wins||0 })),
     eliminated: r.eliminated, chatHistory: r.chatHistory.slice(-60),
   };
 }
@@ -678,8 +757,18 @@ function eliminate(code, playerId) {
     if (!rooms[code]) return;
     const al = alive(code);
     if (al.length <= 1) {
+      const winnerId = al[0]?.id;
+      // Record wins & games for all participants
+      const allPlayers = Object.keys(r.players);
+      allPlayers.forEach(pid => {
+        const sock = io.sockets.sockets.get(pid);
+        if (sock?.data?.userId) {
+          recordGame(sock.data.userId);
+          if (pid === winnerId) recordWin(sock.data.userId);
+        }
+      });
       setPhase(code, PHASE.GAME_OVER, {
-        winnerId:   al[0]?.id,
+        winnerId,
         winnerName: al[0]?.name || 'Nobody',
         eliminated: r.eliminated,
         roundHistory: r.roundHistory,
@@ -696,10 +785,18 @@ function eliminate(code, playerId) {
 // ============================================================
 io.on('connection', socket => {
 
+  // Associate logged-in userId with this socket
+  socket.on('identify', ({ userId }) => {
+    if (!userId) return;
+    const db = loadDB();
+    if (db.users[userId]) socket.data.userId = userId;
+  });
+
   socket.on('room:create', ({ name }) => {
     if (!name?.trim()) return socket.emit('error', { msg: 'Enter your name' });
     const n = name.trim().slice(0, 20);
-    const code = createRoom(socket.id, n);
+    const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
+    const code = createRoom(socket.id, n, wins);
     socket.join(code);
     socket.data.code = code;
     socket.data.name = n;
@@ -715,7 +812,8 @@ io.on('connection', socket => {
     if (!name?.trim())                       return socket.emit('error', { msg: 'Enter your name.' });
     if (alive(upper).length >= MAX_PLAYERS)  return socket.emit('error', { msg: 'Room is full (10/10).' });
     const n = name.trim().slice(0, 20);
-    addPlayer(upper, socket.id, n);
+    const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
+    addPlayer(upper, socket.id, n, false, wins);
     socket.join(upper);
     socket.data.code = upper;
     socket.data.name = n;

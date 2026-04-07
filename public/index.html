@@ -10,13 +10,58 @@
 </head>
 <body>
 
+<!-- =============== AUTH =============== -->
+<div id="screen-auth" class="screen active">
+  <div class="landing-bg"></div>
+  <div class="auth-wrap">
+    <div class="logo">
+      <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
+      <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab auth-tab-active" id="tab-login">LOGIN</button>
+        <button class="auth-tab" id="tab-register">REGISTER</button>
+      </div>
+
+      <!-- Login -->
+      <div id="form-login" class="auth-form">
+        <input id="auth-email"    class="input-field" type="email"    placeholder="EMAIL"    autocomplete="email"/>
+        <input id="auth-password" class="input-field" type="password" placeholder="PASSWORD" autocomplete="current-password"/>
+        <button class="btn btn-primary" id="btn-do-login">LOGIN</button>
+      </div>
+
+      <!-- Register -->
+      <div id="form-register" class="auth-form" style="display:none">
+        <input id="reg-name"     class="input-field" type="text"     placeholder="YOUR NAME (shown in game)" maxlength="20"/>
+        <input id="reg-email"    class="input-field" type="email"    placeholder="EMAIL"/>
+        <input id="reg-password" class="input-field" type="password" placeholder="PASSWORD (min 6 chars)"/>
+        <button class="btn btn-primary" id="btn-do-register">CREATE ACCOUNT</button>
+      </div>
+
+      <div id="auth-error" class="error-msg"></div>
+      <button class="btn-ghost" id="btn-guest">▷ Continue as Guest</button>
+    </div>
+  </div>
+</div>
+
 <!-- =============== LANDING =============== -->
-<div id="screen-landing" class="screen active">
+<div id="screen-landing" class="screen">
   <div class="landing-bg"></div>
   <div class="landing-content">
     <div class="logo">
       <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
       <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
+    </div>
+    <!-- Player identity bar -->
+    <div class="player-identity" id="player-identity" style="display:none">
+      <div id="identity-shirt"></div>
+      <div class="identity-info">
+        <div class="identity-name" id="identity-name"></div>
+        <div class="identity-stats" id="identity-stats"></div>
+      </div>
+      <button class="btn-icon" id="btn-leaderboard" title="Hall of Champions">🏆</button>
+      <button class="btn-icon" id="btn-logout" title="Logout">🚪</button>
     </div>
     <div class="landing-card">
       <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
@@ -31,6 +76,15 @@
       <div id="landing-error" class="error-msg"></div>
     </div>
   </div>
+</div>
+
+<!-- =============== LEADERBOARD =============== -->
+<div id="screen-leaderboard" class="screen">
+  <div class="lb-header">
+    <button class="btn btn-secondary" id="btn-lb-back">← BACK</button>
+    <div class="lb-title">🏆 HALL OF CHAMPIONS</div>
+  </div>
+  <div id="lb-list" class="lb-list"></div>
 </div>
 
 <!-- =============== LOBBY =============== -->
