@@ -35,12 +35,13 @@ html, body {
    ============================================================ */
 .screen { display: none; position: fixed; inset: 0; overflow: hidden; }
 .screen.active { display: flex; flex-direction: column; }
+#screen-auth { overflow-y: auto; }
 
 /* ============================================================
    LANDING
    ============================================================ */
 .landing-bg {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(135deg, #0a0a0f 0%, #1a0010 40%, #0a0010 100%);
 }
 .landing-bg::after {
@@ -641,7 +642,7 @@ html, body {
 .auth-wrap {
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center;
-  gap: 1.5rem; padding: 2rem 1rem; min-height: 100vh;
+  gap: 1.5rem; padding: 2rem 1rem; min-height: 100%;
   justify-content: center;
 }
 .auth-card {

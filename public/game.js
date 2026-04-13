@@ -719,6 +719,14 @@ $('tab-register').addEventListener('click', () => {
   $('tab-login').classList.remove('auth-tab-active');
 });
 
+// Enter key on login fields
+['auth-email','auth-password'].forEach(id => {
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-do-login').click(); });
+});
+['reg-name','reg-email','reg-password'].forEach(id => {
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('btn-do-register').click(); });
+});
+
 // Login
 $('btn-do-login').addEventListener('click', async () => {
   const email = $('auth-email').value.trim();
