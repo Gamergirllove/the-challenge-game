@@ -369,6 +369,79 @@ function updateArenaBars(p1Id, p1Score, p2Id, p2Score) {
   }
 }
 
+// ── Finale bar updater ─────────────────────────────────────
+function updateFinaleBars(p1Id, p1Score, p2Id, p2Score) {
+  const max = 1000;
+  const p1Pct = Math.min(100, (p1Score / max) * 100);
+  const p2Pct = Math.min(100, (p2Score / max) * 100);
+  const b1 = $('flb-p1-bar'), b2 = $('flb-p2-bar');
+  const s1 = $('flb-p1-score'), s2 = $('flb-p2-score');
+  if (b1) b1.style.width = p1Pct + '%';
+  if (s1) s1.textContent = p1Score;
+  if (b2) b2.style.width = p2Pct + '%';
+  if (s2) s2.textContent = p2Score;
+  // Update watcher overlay
+  const ws = $('finale-watch-status');
+  if (ws && ws.closest('#screen-finale')?.classList.contains('active')) {
+    const fd = window._finaleData;
+    if (fd) {
+      ws.innerHTML = `
+        <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:.75rem">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+              <span>${escHtml(fd.p1Name)}</span><strong style="color:var(--gold)">${p1Score} pts</strong>
+            </div>
+            <div style="background:var(--dark3);border-radius:20px;height:14px;overflow:hidden">
+              <div style="height:100%;background:var(--gold);width:${p1Pct}%;transition:width .4s;border-radius:20px"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+              <span>${escHtml(fd.p2Name)}</span><strong style="color:var(--blue)">${p2Score} pts</strong>
+            </div>
+            <div style="background:var(--dark3);border-radius:20px;height:14px;overflow:hidden">
+              <div style="height:100%;background:var(--blue);width:${p2Pct}%;transition:width .4s;border-radius:20px"></div>
+            </div>
+          </div>
+        </div>`;
+    }
+  }
+}
+
+// ── Finale results renderer ────────────────────────────────
+function renderFinaleResults(data) {
+  $('fr-game-name').textContent = data.gameName;
+  $('fr-round').textContent = data.finaleRound;
+  $('fr-total').textContent = data.totalRounds;
+  $('fr-p1-name').textContent = data.p1Name;
+  $('fr-p2-name').textContent = data.p2Name;
+  $('fr-p1-score').textContent = data.p1Score + ' pts';
+  $('fr-p2-score').textContent = data.p2Score + ' pts';
+  $('fr-p1-card').classList.toggle('winner', data.roundWinnerId === data.p1Id);
+  $('fr-p2-card').classList.toggle('winner', data.roundWinnerId === data.p2Id);
+  $('fr-winner-msg').textContent = `🏆 ${data.roundWinnerName} wins this round!`;
+
+  // Score tally
+  const w1 = data.finaleWins?.[data.p1Id] || 0;
+  const w2 = data.finaleWins?.[data.p2Id] || 0;
+  const tally = $('fr-tally');
+  if (tally) {
+    tally.innerHTML = `
+      <div class="fr-tally-dot ${w1>0?'has-win':''}">${escHtml(data.p1Name)}: ${w1}W</div>
+      <div style="color:var(--muted)">—</div>
+      <div class="fr-tally-dot ${w2>0?'has-win':''}">${escHtml(data.p2Name)}: ${w2}W</div>`;
+  }
+
+  const next = $('fr-next-msg');
+  if (next) {
+    if (data.finaleRound >= data.totalRounds) {
+      next.textContent = 'FINAL RESULTS COMING…';
+    } else {
+      next.textContent = `NEXT: GAME ${data.finaleRound + 1} OF ${data.totalRounds}`;
+    }
+  }
+}
+
 // ── Socket events ──────────────────────────────────────────
 socket.on('connect', () => { myId = socket.id; });
 
@@ -403,11 +476,20 @@ socket.on('error', ({ msg }) => {
 socket.on('game:phase', (data) => {
   if (gameState) gameState.phase = data.phase;
   if (isSpectator) {
-    // Spectators only react to arena start/end for live bars
+    // Spectators only react to arena/finale start/end for live bars
     if (data.phase === 'arena') {
       window._arenaData = { p1Id:data.p1Id, p2Id:data.p2Id, p1Name:data.p1Name, p2Name:data.p2Name };
       $('spec-arena-live').style.display = 'block';
       updateArenaBars(data.p1Id, 0, data.p2Id, 0);
+    }
+    if (data.phase === 'finale') {
+      window._finaleData = { p1Id:data.p1Id, p2Id:data.p2Id, p1Name:data.p1Name, p2Name:data.p2Name, finaleWins:data.finaleWins };
+      $('spec-arena-live').style.display = 'block';
+      const specBars = $('spec-arena-bars');
+      if (specBars) {
+        specBars.innerHTML = `<div class="spec-section-title" style="margin-bottom:.5rem">👑 FINALE — LIVE</div>`;
+      }
+      updateFinaleBars(data.p1Id, 0, data.p2Id, 0);
     }
     if (data.phase === 'game_over') {
       $('go-winner').textContent = data.winnerName;
@@ -522,6 +604,53 @@ socket.on('game:phase', (data) => {
       showScreen('screen-arena-results');
       break;
     }
+    case 'finale_intro': {
+      $('fi-round').textContent = data.finaleRound;
+      $('fi-total').textContent = data.totalRounds;
+      $('fi-game-name').textContent = data.gameName;
+      $('fi-p1-name').textContent = data.p1Name;
+      $('fi-p2-name').textContent = data.p2Name;
+      $('fi-p1-wins').textContent = `${data.finaleWins?.[data.p1Id]||0} WIN${(data.finaleWins?.[data.p1Id]||0)!==1?'S':''}`;
+      $('fi-p2-wins').textContent = `${data.finaleWins?.[data.p2Id]||0} WIN${(data.finaleWins?.[data.p2Id]||0)!==1?'S':''}`;
+      $('fi-countdown').textContent = '';
+      showScreen('screen-finale-intro');
+      hideTimerBar();
+      let fc = 4;
+      const ft = setInterval(() => { $('fi-countdown').textContent = fc>0?fc:'GO!'; fc--; if(fc<-1) clearInterval(ft); }, 1000);
+      break;
+    }
+    case 'finale': {
+      window._finaleData = { p1Id:data.p1Id, p2Id:data.p2Id, p1Name:data.p1Name, p2Name:data.p2Name, finaleWins:data.finaleWins };
+      $('ftb-p1-name').textContent = data.p1Name;
+      $('ftb-p2-name').textContent = data.p2Name;
+      $('ftb-p1-wins').textContent = `${data.finaleWins?.[data.p1Id]||0}W`;
+      $('ftb-p2-wins').textContent = `${data.finaleWins?.[data.p2Id]||0}W`;
+      $('ftb-p1-status').textContent = '⏳';
+      $('ftb-p2-status').textContent = '⏳';
+      $('ftb-game-name').textContent = data.gameType?.toUpperCase() || '';
+      $('finale-timer').textContent = data.timeLimit;
+      $('flb-p1-name').textContent = data.p1Name;
+      $('flb-p2-name').textContent = data.p2Name;
+      updateFinaleBars(data.p1Id, 0, data.p2Id, 0);
+      showScreen('screen-finale');
+      showTimerBar(data.timeLimit);
+      const amPlaying = myId === data.p1Id || myId === data.p2Id;
+      $('finale-watch-overlay').style.display = amPlaying ? 'none' : 'flex';
+      $('finale-done-overlay').style.display = 'none';
+      $('finale-puzzle-area').innerHTML = '';
+      if (amPlaying) {
+        renderPuzzle('finale-puzzle-area', 'finale-done-overlay', data.gameType, data.puzzleData);
+      } else {
+        $('finale-watch-status').innerHTML = `<div>${escHtml(data.p1Name)} vs ${escHtml(data.p2Name)}</div><div style="margin-top:.5rem;font-size:.85rem;color:var(--muted)">The final two are fighting for glory…</div>`;
+      }
+      break;
+    }
+    case 'finale_results': {
+      renderFinaleResults(data);
+      showScreen('screen-finale-results');
+      hideTimerBar();
+      break;
+    }
     case 'elimination': {
       $('elim-name').textContent = data.eliminatedName;
       $('elim-remaining').textContent = `${data.remaining} player${data.remaining!==1?'s':''} remain`;
@@ -543,10 +672,11 @@ socket.on('game:phase', (data) => {
 // ── Timer ──────────────────────────────────────────────────
 socket.on('timer', ({ remaining }) => {
   updateTimerBar(remaining);
-  if ($('screen-daily')?.classList.contains('active'))       setTimerVal('daily-timer', remaining);
-  if ($('screen-discussion')?.classList.contains('active'))  setTimerVal('disc-timer', remaining);
-  if ($('screen-voting')?.classList.contains('active'))      setTimerVal('vote-timer', remaining);
-  if ($('screen-arena')?.classList.contains('active'))       setTimerVal('arena-timer', remaining);
+  if ($('screen-daily')?.classList.contains('active'))          setTimerVal('daily-timer', remaining);
+  if ($('screen-discussion')?.classList.contains('active'))     setTimerVal('disc-timer', remaining);
+  if ($('screen-voting')?.classList.contains('active'))         setTimerVal('vote-timer', remaining);
+  if ($('screen-arena')?.classList.contains('active'))          setTimerVal('arena-timer', remaining);
+  if ($('screen-finale')?.classList.contains('active'))         setTimerVal('finale-timer', remaining);
   if ($('screen-daily-results')?.classList.contains('active')) { const el=$('dr-timer'); if(el) el.textContent=remaining; }
 });
 
@@ -583,6 +713,15 @@ socket.on('arena:live', ({ p1Id, p1Score, p2Id, p2Score }) => {
   updateArenaBars(p1Id, p1Score, p2Id, p2Score);
 });
 
+// ── Finale live scores ─────────────────────────────────────
+socket.on('finale:live', ({ p1Id, p1Score, p2Id, p2Score }) => {
+  updateFinaleBars(p1Id, p1Score, p2Id, p2Score);
+  // Update status icons
+  if (window._finaleData) {
+    if (p1Score > 0 || p2Score > 0) { /* bars already updated */ }
+  }
+});
+
 // ── Elimination choice ─────────────────────────────────────
 socket.on('elimination:choice', ({ eliminatedName }) => {
   $('ecm-name').textContent = eliminatedName;
@@ -596,7 +735,7 @@ socket.on('spectator:init', data => {
 });
 socket.on('spectator:update', data => {
   updateSpectatorScreen(data);
-  if (data.phase !== 'arena') $('spec-arena-live').style.display = 'none';
+  if (data.phase !== 'arena' && data.phase !== 'finale') $('spec-arena-live').style.display = 'none';
 });
 socket.on('spectator:watching', ({ targetName }) => {
   $('spec-watching-label').textContent = `Watching: ${targetName}`;

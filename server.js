@@ -110,19 +110,26 @@ const ARENA_INTRO_SEC= 6;
 const ELIM_SEC       = 6;
 
 const PHASE = {
-  LOBBY:         'lobby',
-  DAILY_INTRO:   'daily_intro',
-  DAILY:         'daily',
-  DAILY_RESULTS: 'daily_results',
-  DISCUSSION:    'discussion',
-  VOTING:        'voting',
-  VOTE_RESULTS:  'vote_results',
-  ARENA_INTRO:   'arena_intro',
-  ARENA:         'arena',
-  ARENA_RESULTS: 'arena_results',
-  ELIMINATION:   'elimination',
-  GAME_OVER:     'game_over',
+  LOBBY:          'lobby',
+  DAILY_INTRO:    'daily_intro',
+  DAILY:          'daily',
+  DAILY_RESULTS:  'daily_results',
+  DISCUSSION:     'discussion',
+  VOTING:         'voting',
+  VOTE_RESULTS:   'vote_results',
+  ARENA_INTRO:    'arena_intro',
+  ARENA:          'arena',
+  ARENA_RESULTS:  'arena_results',
+  ELIMINATION:    'elimination',
+  FINALE_INTRO:   'finale_intro',
+  FINALE:         'finale',
+  FINALE_RESULTS: 'finale_results',
+  GAME_OVER:      'game_over',
 };
+
+const FINALE_GAMES = ['tapfrenzy', 'tangram', 'memory'];
+const FINALE_TIMES = { tapfrenzy: 60, tangram: 90, memory: 30 };
+const FINALE_SEC   = 5;
 
 // Separate pools — daily != arena (10 each)
 const DAILY_POOL = [
@@ -512,6 +519,8 @@ function createRoom(hostId, hostName, hostWins=0) {
     votes: {}, duelResults: {}, liveScores: {},
     chatHistory: [], eliminated: [], roundHistory: [],
     timer: null, tickInterval: null,
+    // Finale state
+    finaleRound: 0, finaleWins: {}, finalePlayers: [],
   };
   addPlayer(code, hostId, hostName, true, hostWins);
   return code;
@@ -639,6 +648,7 @@ function startDiscussion(code) {
     lastPlaceName: r.players[r.lastPlaceId]?.name,
     timeLeft: DISCUSSION_SEC,
   });
+  broadcastSpectatorUpdate(code);
   startTimer(code, DISCUSSION_SEC, () => startVoting(code));
 }
 
@@ -651,6 +661,7 @@ function startVoting(code) {
     lastPlaceName: r.players[r.lastPlaceId]?.name,
     votable, timeLeft: VOTING_SEC,
   });
+  broadcastSpectatorUpdate(code);
   startTimer(code, VOTING_SEC, () => endVoting(code));
 }
 
@@ -690,6 +701,7 @@ function startArenaIntro(code) {
     p2Id:p2.id, p2Name:p2.name,
     duelType: r.duelType, duelName: PUZZLE_NAMES[r.duelType],
   });
+  broadcastSpectatorUpdate(code);
   setTimeout(() => { if (rooms[code]?.phase === PHASE.ARENA_INTRO) startArena(code); }, ARENA_INTRO_SEC * 1000);
 }
 
@@ -781,10 +793,119 @@ function eliminate(code, playerId) {
         roundHistory: r.roundHistory,
       });
       broadcastSpectatorUpdate(code);
+    } else if (al.length === 2) {
+      startFinale(code);
     } else {
       startRound(code);
     }
   }, ELIM_SEC * 1000);
+}
+
+// ============================================================
+// FINALE MODE (2 players left — 3 rapid-fire games)
+// ============================================================
+function startFinale(code) {
+  const r = rooms[code]; if (!r) return;
+  const al = alive(code);
+  r.finaleRound = 0;
+  r.finaleWins  = {};
+  r.finalePlayers = al.map(p => p.id);
+  al.forEach(p => { r.finaleWins[p.id] = 0; });
+  startFinaleRound(code);
+}
+
+function startFinaleRound(code) {
+  const r = rooms[code]; if (!r) return;
+  const gameType  = FINALE_GAMES[r.finaleRound];
+  const timeLimit = FINALE_TIMES[gameType];
+  r.puzzleType = gameType;
+  r.puzzleData = makePuzzle(gameType);
+  r.duelResults = {}; r.liveScores = {};
+  alive(code).forEach(p => { p.roundScore = 0; p.finished = false; });
+
+  const [p1Id, p2Id] = r.finalePlayers;
+  setPhase(code, PHASE.FINALE_INTRO, {
+    finaleRound:  r.finaleRound + 1,
+    totalRounds:  FINALE_GAMES.length,
+    gameType, gameName: PUZZLE_NAMES[gameType], timeLimit,
+    p1Id, p1Name: r.players[p1Id]?.name,
+    p2Id, p2Name: r.players[p2Id]?.name,
+    finaleWins: r.finaleWins,
+  });
+  broadcastSpectatorUpdate(code);
+  setTimeout(() => { if (rooms[code]?.phase === PHASE.FINALE_INTRO) startFinaleGame(code); }, INTRO_SEC * 1000);
+}
+
+function startFinaleGame(code) {
+  const r = rooms[code]; if (!r) return;
+  const timeLimit = FINALE_TIMES[r.puzzleType];
+  const [p1Id, p2Id] = r.finalePlayers;
+  setPhase(code, PHASE.FINALE, {
+    finaleRound: r.finaleRound + 1,
+    totalRounds: FINALE_GAMES.length,
+    gameType: r.puzzleType, puzzleData: r.puzzleData, timeLimit,
+    p1Id, p1Name: r.players[p1Id]?.name,
+    p2Id, p2Name: r.players[p2Id]?.name,
+    finaleWins: r.finaleWins,
+  });
+  broadcastSpectatorUpdate(code);
+  startTimer(code, timeLimit, () => endFinaleGame(code));
+}
+
+function endFinaleGame(code) {
+  const r = rooms[code]; if (!r) return;
+  clearTimer(code);
+  const [p1Id, p2Id] = r.finalePlayers;
+  const s1 = r.duelResults[p1Id]?.score || 0;
+  const s2 = r.duelResults[p2Id]?.score || 0;
+  let roundWinnerId;
+  if (s1 > s2)      roundWinnerId = p1Id;
+  else if (s2 > s1) roundWinnerId = p2Id;
+  else              roundWinnerId = Math.random() < 0.5 ? p1Id : p2Id; // tie = random
+  r.finaleWins[roundWinnerId] = (r.finaleWins[roundWinnerId] || 0) + 1;
+
+  setPhase(code, PHASE.FINALE_RESULTS, {
+    finaleRound: r.finaleRound + 1,
+    totalRounds: FINALE_GAMES.length,
+    gameType: r.puzzleType, gameName: PUZZLE_NAMES[r.puzzleType],
+    p1Id, p1Name: r.players[p1Id]?.name, p1Score: s1,
+    p2Id, p2Name: r.players[p2Id]?.name, p2Score: s2,
+    roundWinnerId, roundWinnerName: r.players[roundWinnerId]?.name,
+    finaleWins: r.finaleWins,
+  });
+  broadcastSpectatorUpdate(code);
+
+  r.finaleRound++;
+  const delay = FINALE_SEC * 1000;
+  if (r.finaleRound >= FINALE_GAMES.length) {
+    setTimeout(() => { if (rooms[code]?.phase === PHASE.FINALE_RESULTS) endFinale(code); }, delay);
+  } else {
+    setTimeout(() => { if (rooms[code]?.phase === PHASE.FINALE_RESULTS) startFinaleRound(code); }, delay);
+  }
+}
+
+function endFinale(code) {
+  const r = rooms[code]; if (!r) return;
+  const [p1Id, p2Id] = r.finalePlayers;
+  const w1 = r.finaleWins[p1Id] || 0;
+  const w2 = r.finaleWins[p2Id] || 0;
+  const winnerId = w1 >= w2 ? p1Id : p2Id;
+  // Record wins & games for all participants
+  Object.keys(r.players).forEach(pid => {
+    const sock = io.sockets.sockets.get(pid);
+    if (sock?.data?.userId) {
+      recordGame(sock.data.userId);
+      if (pid === winnerId) recordWin(sock.data.userId);
+    }
+  });
+  setPhase(code, PHASE.GAME_OVER, {
+    winnerId,
+    winnerName: r.players[winnerId]?.name || 'Nobody',
+    eliminated: r.eliminated,
+    roundHistory: r.roundHistory,
+    finaleMode: true,
+  });
+  broadcastSpectatorUpdate(code);
 }
 
 // ============================================================
@@ -841,12 +962,13 @@ io.on('connection', socket => {
   socket.on('puzzle:complete', ({ result, timeMs }) => {
     const { code } = socket.data;
     const r = rooms[code]; if (!r) return;
-    if (r.phase !== PHASE.DAILY && r.phase !== PHASE.ARENA) return;
+    if (r.phase !== PHASE.DAILY && r.phase !== PHASE.ARENA && r.phase !== PHASE.FINALE) return;
     const p = r.players[socket.id]; if (!p || p.finished) return;
     if (r.phase === PHASE.ARENA && socket.id !== r.lastPlaceId && socket.id !== r.duelOpponentId) return;
+    if (r.phase === PHASE.FINALE && !r.finalePlayers.includes(socket.id)) return;
 
     p.finished = true;
-    const type = r.phase === PHASE.ARENA ? r.duelType : r.puzzleType;
+    const type = r.puzzleType; // works for all phases now
     const score = calcScore(type, result || {}, timeMs || 99999);
     p.roundScore = score;
 
@@ -854,13 +976,22 @@ io.on('connection', socket => {
       r.duelResults[socket.id] = { score };
       r.liveScores[socket.id] = score;
       io.to(code).emit('duel:progress', { playerId: socket.id, playerName: p.name });
-      // Broadcast final live scores
       io.to(code).emit('arena:live', {
-        p1Id: r.lastPlaceId,   p1Score: r.liveScores[r.lastPlaceId]   || 0,
+        p1Id: r.lastPlaceId,    p1Score: r.liveScores[r.lastPlaceId]    || 0,
         p2Id: r.duelOpponentId, p2Score: r.liveScores[r.duelOpponentId] || 0,
       });
       if (r.duelResults[r.lastPlaceId] && r.duelResults[r.duelOpponentId]) endArena(code);
+    } else if (r.phase === PHASE.FINALE) {
+      r.duelResults[socket.id] = { score };
+      r.liveScores[socket.id] = score;
+      const [p1Id, p2Id] = r.finalePlayers;
+      io.to(code).emit('finale:live', {
+        p1Id, p1Score: r.liveScores[p1Id] || 0,
+        p2Id, p2Score: r.liveScores[p2Id] || 0,
+      });
+      if (r.duelResults[p1Id] && r.duelResults[p2Id]) { clearTimer(code); endFinaleGame(code); }
     } else {
+      // DAILY
       const al = alive(code);
       const done = al.filter(p2 => p2.finished).length;
       io.to(code).emit('daily:progress', { done, total: al.length });
@@ -868,10 +999,28 @@ io.on('connection', socket => {
     }
   });
 
-  // Live score progress during arena puzzle
+  // Live score progress during puzzles
   socket.on('puzzle:progress', ({ score }) => {
     const { code } = socket.data;
     const r = rooms[code]; if (!r) return;
+
+    if (r.phase === PHASE.DAILY) {
+      // Save partial score so timer expiry captures it
+      const p = r.players[socket.id]; if (p) p.roundScore = Math.max(p.roundScore || 0, score);
+      return;
+    }
+
+    if (r.phase === PHASE.FINALE) {
+      if (!r.finalePlayers.includes(socket.id)) return;
+      r.liveScores[socket.id] = score;
+      const [p1Id, p2Id] = r.finalePlayers;
+      io.to(code).emit('finale:live', {
+        p1Id, p1Score: r.liveScores[p1Id] || 0,
+        p2Id, p2Score: r.liveScores[p2Id] || 0,
+      });
+      return;
+    }
+
     if (r.phase !== PHASE.ARENA) return;
     if (socket.id !== r.lastPlaceId && socket.id !== r.duelOpponentId) return;
     r.liveScores[socket.id] = score;

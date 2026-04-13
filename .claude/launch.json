@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 3000
+    },
+    {
+      "name": "itch-page",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "itch-page", "-p", "3001", "--no-clipboard"],
+      "port": 3001
     }
   ]
 }

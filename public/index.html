@@ -292,6 +292,94 @@
   </div>
 </div>
 
+<!-- =============== FINALE INTRO =============== -->
+<div id="screen-finale-intro" class="screen finale-intro-screen">
+  <div class="finale-fire-bg"></div>
+  <div class="finale-intro-content">
+    <div class="finale-crown">👑</div>
+    <div class="finale-logo">THE FINALE</div>
+    <div class="finale-round-badge">GAME <span id="fi-round"></span> OF <span id="fi-total"></span></div>
+    <div class="finale-game-name" id="fi-game-name"></div>
+    <div class="finale-vs-row">
+      <div class="finale-player-card" id="fi-p1">
+        <div class="finale-pname" id="fi-p1-name"></div>
+        <div class="finale-pscore" id="fi-p1-wins">0 WINS</div>
+      </div>
+      <div class="finale-vs-badge">VS</div>
+      <div class="finale-player-card" id="fi-p2">
+        <div class="finale-pname" id="fi-p2-name"></div>
+        <div class="finale-pscore" id="fi-p2-wins">0 WINS</div>
+      </div>
+    </div>
+    <div class="finale-tagline">BEST OF 3 — THE LAST CHAMPION STANDING</div>
+    <div class="finale-countdown" id="fi-countdown"></div>
+  </div>
+</div>
+
+<!-- =============== FINALE GAME =============== -->
+<div id="screen-finale" class="screen finale-active-screen">
+  <div class="finale-topbar">
+    <div class="finale-tb-player" id="ftb-p1">
+      <span class="finale-tb-name" id="ftb-p1-name"></span>
+      <span class="finale-tb-wins" id="ftb-p1-wins"></span>
+      <span class="finale-tb-status" id="ftb-p1-status">⏳</span>
+    </div>
+    <div class="finale-tb-center">
+      <div class="finale-tb-label">FINALE</div>
+      <div class="timer-ring timer-ring-lg"><span class="timer-val" id="finale-timer">60</span></div>
+      <div class="finale-tb-game" id="ftb-game-name"></div>
+    </div>
+    <div class="finale-tb-player finale-tb-player-right" id="ftb-p2">
+      <span class="finale-tb-status" id="ftb-p2-status">⏳</span>
+      <span class="finale-tb-wins" id="ftb-p2-wins"></span>
+      <span class="finale-tb-name" id="ftb-p2-name"></span>
+    </div>
+  </div>
+  <!-- Live score bars -->
+  <div class="finale-live-bars" id="finale-live-bars">
+    <div class="alb-row">
+      <div class="alb-name" id="flb-p1-name"></div>
+      <div class="alb-bar-wrap"><div class="alb-bar alb-bar-1" id="flb-p1-bar" style="width:0%"><span id="flb-p1-score">0</span></div></div>
+    </div>
+    <div class="alb-row">
+      <div class="alb-name" id="flb-p2-name"></div>
+      <div class="alb-bar-wrap"><div class="alb-bar alb-bar-2" id="flb-p2-bar" style="width:0%"><span id="flb-p2-score">0</span></div></div>
+    </div>
+  </div>
+  <div id="finale-puzzle-area" class="puzzle-area finale-puzzle-area"></div>
+  <div id="finale-watch-overlay" class="arena-watch-overlay" style="display:none">
+    <div class="watch-title">👑 WATCHING THE FINALE</div>
+    <div id="finale-watch-status" class="watch-status"></div>
+  </div>
+  <div id="finale-done-overlay" class="puzzle-done-overlay" style="display:none">
+    <div class="done-icon">⚡</div>
+    <div class="done-text">DONE!</div>
+    <div class="done-sub">Waiting for opponent…</div>
+  </div>
+</div>
+
+<!-- =============== FINALE RESULTS =============== -->
+<div id="screen-finale-results" class="screen finale-results-screen">
+  <div class="finale-results-content">
+    <div class="finale-results-game" id="fr-game-name"></div>
+    <div class="finale-results-round">GAME <span id="fr-round"></span> OF <span id="fr-total"></span></div>
+    <div class="finale-results-scores">
+      <div class="fr-score-card" id="fr-p1-card">
+        <div class="fr-score-name" id="fr-p1-name"></div>
+        <div class="fr-score-val" id="fr-p1-score"></div>
+      </div>
+      <div class="fr-vs">VS</div>
+      <div class="fr-score-card" id="fr-p2-card">
+        <div class="fr-score-name" id="fr-p2-name"></div>
+        <div class="fr-score-val" id="fr-p2-score"></div>
+      </div>
+    </div>
+    <div class="finale-results-winner" id="fr-winner-msg"></div>
+    <div class="finale-results-tally" id="fr-tally"></div>
+    <div class="finale-results-next" id="fr-next-msg"></div>
+  </div>
+</div>
+
 <!-- =============== ELIMINATION =============== -->
 <div id="screen-elimination" class="screen elimination-screen">
   <div class="elim-content">
