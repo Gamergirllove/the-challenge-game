@@ -3,560 +3,295 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Challenge.io — Are You a Challenge Champion?</title>
+  <title>Challenge.io</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --gold: #f5c518;
-      --gold2: #ffd700;
       --cyan: #00e5ff;
-      --purple: #8b5cf6;
       --bg: #0a0a0f;
       --card: #12121a;
       --border: #1e1e2e;
+      --red: #e8192c;
+      --muted: #64748b;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background: var(--bg);
       color: #e2e8f0;
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
+      font-family: 'Barlow Condensed', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px 20px;
-      overflow: hidden;
     }
 
-    .hero::before {
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      padding: 28px 20px 0;
+      text-align: center;
+      position: relative;
+    }
+
+    header::before {
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,197,24,0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 20% 100%, rgba(139,92,246,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,255,0.10) 0%, transparent 60%);
+      background: radial-gradient(ellipse 80% 200px at 50% 0%, rgba(245,197,24,0.1) 0%, transparent 100%);
       pointer-events: none;
     }
 
-    .hero-badge {
-      display: inline-block;
-      background: linear-gradient(90deg, var(--gold), var(--gold2));
-      color: #000;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 4px 14px;
-      border-radius: 999px;
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
+    .logo {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(3rem, 10vw, 7rem);
+      font-size: clamp(2.5rem, 8vw, 5rem);
       font-weight: 900;
-      line-height: 1;
-      background: linear-gradient(135deg, var(--gold) 0%, #fff 50%, var(--cyan) 100%);
+      background: linear-gradient(135deg, var(--gold), #fff 60%, var(--cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 8px;
-      filter: drop-shadow(0 0 40px rgba(245,197,24,0.4));
+      filter: drop-shadow(0 0 30px rgba(245,197,24,0.35));
+      line-height: 1;
     }
 
-    .hero-sub {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+    .logo-sub {
+      font-size: 0.75rem;
       letter-spacing: 4px;
       color: var(--cyan);
       text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
-    .hero-desc {
-      max-width: 640px;
-      font-size: 1.1rem;
-      color: #94a3b8;
-      line-height: 1.7;
-      margin-bottom: 40px;
+      margin-top: 6px;
+      margin-bottom: 28px;
     }
 
     /* ── PLAY BUTTON ── */
+    .play-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+
     .btn-play {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--gold), #e6a800);
+      display: block;
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold), #c98a00);
       color: #000;
       font-family: 'Orbitron', monospace;
       font-weight: 700;
-      font-size: 1.3rem;
-      letter-spacing: 2px;
-      padding: 22px 60px;
-      border-radius: 8px;
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+      padding: 20px;
+      border-radius: 10px;
       text-decoration: none;
+      text-align: center;
       transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 0 40px rgba(245,197,24,0.6), 0 4px 20px rgba(0,0,0,0.4);
-      cursor: pointer;
-      border: none;
-      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(245,197,24,0.5), 0 4px 20px rgba(0,0,0,0.5);
+      animation: pulse 2.5s ease-in-out infinite;
     }
     .btn-play:hover {
-      transform: translateY(-3px) scale(1.04);
-      box-shadow: 0 0 60px rgba(245,197,24,0.8), 0 8px 30px rgba(0,0,0,0.5);
+      transform: scale(1.03);
+      box-shadow: 0 0 60px rgba(245,197,24,0.8);
       animation: none;
     }
 
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 40px rgba(245,197,24,0.6), 0 4px 20px rgba(0,0,0,0.4); }
-      50%       { box-shadow: 0 0 70px rgba(245,197,24,0.9), 0 4px 20px rgba(0,0,0,0.4); }
+      0%,100% { box-shadow: 0 0 40px rgba(245,197,24,0.5), 0 4px 20px rgba(0,0,0,0.5); }
+      50%      { box-shadow: 0 0 70px rgba(245,197,24,0.85), 0 4px 20px rgba(0,0,0,0.5); }
     }
 
-    .hero-note {
-      margin-top: 16px;
+    .launch-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .countdown-line {
       font-size: 0.8rem;
-      color: #475569;
+      color: #334155;
     }
 
-    /* ── COUNTDOWN ── */
-    .redirect-notice {
-      margin-top: 32px;
-      padding: 16px 28px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-size: 0.9rem;
-      color: #64748b;
+    .countdown-line span { color: var(--gold); font-weight: 700; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      max-width: 600px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 20px 0;
     }
-    .redirect-notice strong {
-      color: var(--gold);
+
+    /* ── LEADERBOARD ── */
+    .lb-section {
+      width: 100%;
+      max-width: 600px;
+      padding: 0 20px 60px;
+    }
+
+    .lb-title {
       font-family: 'Orbitron', monospace;
-      font-size: 1.2rem;
-    }
-
-    /* ── STATS BAR ── */
-    .stats-bar {
-      display: flex;
-      justify-content: center;
-      gap: 0;
-      flex-wrap: wrap;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-    }
-
-    .stat-item {
-      flex: 1;
-      min-width: 140px;
-      padding: 28px 20px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-    }
-    .stat-item:last-child { border-right: none; }
-
-    .stat-num {
-      font-family: 'Orbitron', monospace;
-      font-size: 2.2rem;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--gold), var(--cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-top: 4px;
-    }
-
-    /* ── SECTIONS ── */
-    section {
-      padding: 80px 20px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .section-tag {
-      font-size: 0.7rem;
+      font-size: 1.1rem;
       letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--cyan);
-      margin-bottom: 10px;
-    }
-
-    .section-title {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(1.6rem, 4vw, 2.6rem);
-      font-weight: 900;
-      color: #fff;
+      color: var(--gold);
+      text-align: center;
       margin-bottom: 16px;
     }
 
-    .section-lead {
-      color: #94a3b8;
-      font-size: 1.05rem;
-      line-height: 1.7;
-      max-width: 680px;
-      margin-bottom: 48px;
-    }
-
-    /* ── HOW IT WORKS ── */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .step:hover {
-      border-color: var(--gold);
-      transform: translateY(-4px);
-    }
-    .step::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--gold), var(--cyan));
-    }
-
-    .step-num {
-      font-family: 'Orbitron', monospace;
-      font-size: 2rem;
-      font-weight: 900;
-      color: var(--gold);
-      opacity: 0.3;
-      margin-bottom: 12px;
-    }
-
-    .step h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .step p {
-      font-size: 0.88rem;
-      color: #64748b;
-      line-height: 1.6;
-    }
-
-    /* ── GAMES ── */
-    .game-divider {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-    }
-
-    .games-section {
-      background: var(--card);
-      padding: 80px 20px;
-    }
-
-    .games-inner { max-width: 1100px; margin: 0 auto; }
-
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .game-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 14px;
-      text-align: center;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .game-card:hover {
-      border-color: var(--purple);
-      transform: translateY(-3px);
-    }
-
-    .game-icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
-    .game-name { font-size: 0.8rem; font-weight: 600; color: #cbd5e1; }
-    .game-type { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-    .daily-tag { color: var(--gold); }
-    .arena-tag { color: #ef4444; }
-
-    /* ── SHIRT TIERS ── */
-    .tiers-grid {
+    .lb-row {
       display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .tier-card {
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 20px;
-      text-align: center;
-      min-width: 140px;
-      flex: 1;
-      max-width: 180px;
-      transition: transform 0.2s;
-    }
-    .tier-card:hover { transform: translateY(-4px); }
-    .tier-shirt { font-size: 2.4rem; margin-bottom: 10px; display: block; }
-    .tier-name { font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-    .tier-wins { font-size: 0.75rem; color: #475569; }
-    .tier-rookie   { border-top: 3px solid #94a3b8; } .tier-rookie   .tier-name { color: #94a3b8; }
-    .tier-bronze   { border-top: 3px solid #cd7f32; } .tier-bronze   .tier-name { color: #cd7f32; }
-    .tier-silver   { border-top: 3px solid #c0c0c0; } .tier-silver   .tier-name { color: #c0c0c0; }
-    .tier-gold     { border-top: 3px solid #ffd700; } .tier-gold     .tier-name { color: #ffd700; }
-    .tier-champion { border-top: 3px solid #f5c518; box-shadow: 0 0 20px rgba(245,197,24,0.2); } .tier-champion .tier-name { color: var(--gold); }
-
-    /* ── FEATURES ── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-    }
-
-    .feature {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
+      border-radius: 8px;
+      margin-bottom: 8px;
       transition: border-color 0.2s;
     }
-    .feature:hover { border-color: var(--cyan); }
-    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
-    .feature h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .feature p { font-size: 0.88rem; color: #64748b; line-height: 1.6; }
+    .lb-row:hover { border-color: rgba(245,197,24,0.3); }
 
-    /* ── BOTTOM CTA ── */
-    .cta-section {
-      background: linear-gradient(135deg, #0d0d18 0%, #120a00 50%, #0d0d18 100%);
-      padding: 100px 20px;
-      text-align: center;
-      border-top: 1px solid var(--border);
-    }
+    .lb-row.top1 { border-color: #ffd700; background: linear-gradient(90deg, rgba(255,215,0,0.08), var(--card)); }
+    .lb-row.top2 { border-color: #c0c0c0; background: linear-gradient(90deg, rgba(192,192,192,0.06), var(--card)); }
+    .lb-row.top3 { border-color: #cd7f32; background: linear-gradient(90deg, rgba(205,127,50,0.06), var(--card)); }
 
-    /* ── FOOTER ── */
-    footer {
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 32px 20px;
-      text-align: center;
-    }
-
-    .footer-logo {
+    .lb-rank {
       font-family: 'Orbitron', monospace;
-      font-size: 1.4rem;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--gold), var(--cyan));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      width: 28px;
+      text-align: center;
+    }
+    .lb-row.top1 .lb-rank { color: #ffd700; }
+    .lb-row.top2 .lb-rank { color: #c0c0c0; }
+    .lb-row.top3 .lb-rank { color: #cd7f32; }
+
+    .lb-shirt { width: 36px; height: 36px; flex-shrink: 0; }
+
+    .lb-name {
+      flex: 1;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
 
-    footer p { font-size: 0.8rem; color: #334155; }
-    footer a { color: var(--cyan); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-
-    .fade-in {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+    .lb-wins {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      color: var(--gold);
     }
-    .fade-in.visible { opacity: 1; transform: none; }
+
+    .lb-games {
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+    }
+
+    .lb-loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-badge">Free to Play &bull; Multiplayer &bull; No Download</div>
-    <h1>CHALLENGE.IO</h1>
-    <div class="hero-sub">20 Mini-Games &bull; Social Deduction &bull; One Champion</div>
-    <p class="hero-desc">
-      Compete in 20 brutal mini-games, survive the vote, and outlast your rivals in
-      head-to-head arena duels. Only one player earns the title of
-      <strong style="color:var(--gold)">Challenge Champion</strong>.
-    </p>
+  <header>
+    <div class="logo">CHALLENGE.IO</div>
+    <div class="logo-sub">Multiplayer &bull; Social Deduction &bull; 20 Mini-Games</div>
+  </header>
 
+  <!-- PLAY -->
+  <div class="play-section">
     <a class="btn-play" id="play-btn" href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener">
-      ▶ PLAY NOW — FREE
+      ▶ PLAY NOW
     </a>
-
-    <p class="hero-note">Opens in a new tab &bull; Browser-based &bull; Up to 10 players &bull; Any device</p>
-
-    <div class="redirect-notice">
-      Auto-launching in <strong id="countdown">5</strong> seconds…
-      &nbsp;&nbsp;<a href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener" style="color:var(--cyan)">Click here if it doesn't open</a>
-    </div>
-  </section>
-
-  <!-- STATS BAR -->
-  <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">20</div><div class="stat-label">Mini-Games</div></div>
-    <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">Players per Room</div></div>
-    <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">Shirt Tiers</div></div>
-    <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Downloads Needed</div></div>
+    <div class="launch-note">Free to play &bull; No download &bull; Up to 10 players</div>
+    <div class="countdown-line">Opening in <span id="countdown">5</span>s…</div>
   </div>
 
-  <!-- HOW IT WORKS -->
-  <section class="fade-in">
-    <div class="section-tag">How to Play</div>
-    <h2 class="section-title">Every Round Is a Fight for Survival</h2>
-    <p class="section-lead">
-      Each game cycle puts your reflexes, strategy, and social skills to the test.
-      Score high, dodge the vote, win the arena — or go home.
-    </p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <h3>Daily Mini-Game</h3>
-        <p>All players compete simultaneously. Top scorers earn safety. The bottom player faces elimination risk.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <h3>The Discussion</h3>
-        <p>Chat with rivals. Form alliances. Drop hints or misdirect. 60 seconds before the vote locks in.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <h3>The Vote</h3>
-        <p>Players vote for who they want to face in the arena. The two most-voted players go head-to-head.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">04</div>
-        <h3>Arena Duel</h3>
-        <p>A head-to-head battle in a harder game. Loser is eliminated. Winner earns a Career Win.</p>
-      </div>
-    </div>
-  </section>
+  <div class="divider"></div>
 
-  <!-- GAMES -->
-  <div class="game-divider"></div>
-  <div class="games-section">
-    <div class="games-inner fade-in">
-      <div class="section-tag">Mini-Games</div>
-      <h2 class="section-title">20 Games. Zero Mercy.</h2>
-      <p class="section-lead">Daily games test everyone equally. Arena games are designed to be harder — because everything's on the line.</p>
-      <div class="games-grid">
-        <div class="game-card"><span class="game-icon">🧠</span><div class="game-name">Memory Matrix</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">➕</span><div class="game-name">Quick Math</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">⚡</span><div class="game-name">Reaction Time</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🔢</span><div class="game-name">Number Hunt</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">👆</span><div class="game-name">Tap Frenzy</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">⌨️</span><div class="game-name">Fast Fingers</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🔀</span><div class="game-name">Word Scramble</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🎨</span><div class="game-name">Color Sequence</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🧩</span><div class="game-name">Tessellations</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">↕️</span><div class="game-name">Speed Sort</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🟦</span><div class="game-name">Tangram</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">🎨</span><div class="game-name">Color Match</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">💣</span><div class="game-name">Find the Bomb</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🏎️</span><div class="game-name">Math Race</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🔴</span><div class="game-name">Simon Extreme</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🔒</span><div class="game-name">Grid Lock</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🪤</span><div class="game-name">Minesweeper</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">😀</span><div class="game-name">Emoji Sort</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🪨</span><div class="game-name">Curling</div><div class="game-type arena-tag">Arena</div></div>
-        <div class="game-card"><span class="game-icon">🚇</span><div class="game-name">Tunnel Dodge</div><div class="game-type arena-tag">Arena</div></div>
-      </div>
-    </div>
+  <!-- LEADERBOARD -->
+  <div class="lb-section">
+    <div class="lb-title">🏆 HALL OF CHAMPIONS</div>
+    <div id="lb-list"><div class="lb-loading">LOADING…</div></div>
   </div>
-  <div class="game-divider"></div>
-
-  <!-- SHIRT TIERS -->
-  <section class="fade-in">
-    <div class="section-tag">Progression</div>
-    <h2 class="section-title">Earn Your Shirt</h2>
-    <p class="section-lead">Every arena win upgrades your shirt. Rookies wear grey. Champions wear gold — and earn a star every 10 wins.</p>
-    <div class="tiers-grid">
-      <div class="tier-card tier-rookie"><span class="tier-shirt">👕</span><div class="tier-name">Rookie</div><div class="tier-wins">0 wins</div></div>
-      <div class="tier-card tier-bronze"><span class="tier-shirt">👕</span><div class="tier-name">Bronze</div><div class="tier-wins">1–2 wins</div></div>
-      <div class="tier-card tier-silver"><span class="tier-shirt">👕</span><div class="tier-name">Silver</div><div class="tier-wins">3–4 wins</div></div>
-      <div class="tier-card tier-gold"><span class="tier-shirt">👕</span><div class="tier-name">Gold</div><div class="tier-wins">5–9 wins</div></div>
-      <div class="tier-card tier-champion"><span class="tier-shirt">⭐</span><div class="tier-name">Champion</div><div class="tier-wins">10+ wins</div></div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <div class="game-divider"></div>
-  <section class="fade-in">
-    <div class="section-tag">Features</div>
-    <h2 class="section-title">Built Different</h2>
-    <p class="section-lead">Everything you need for a competitive, social, replayable experience — no install required.</p>
-    <div class="features-grid">
-      <div class="feature"><span class="feature-icon">🏆</span><h3>Hall of Champions</h3><p>A persistent global leaderboard tracks career wins. Earn your spot and defend it.</p></div>
-      <div class="feature"><span class="feature-icon">🔗</span><h3>Instant Room Codes</h3><p>Create a room in one click, share a 6-letter code. No accounts required — guest play anytime.</p></div>
-      <div class="feature"><span class="feature-icon">🎭</span><h3>Social Deduction</h3><p>Discussion and voting turn every round into a psychological battle. Allies become threats.</p></div>
-      <div class="feature"><span class="feature-icon">📱</span><h3>Works Everywhere</h3><p>Any modern browser on desktop, tablet, or phone. Host on PC, join from your couch.</p></div>
-      <div class="feature"><span class="feature-icon">🔄</span><h3>Always Different</h3><p>Random selection from two separate game pools means no two sessions play the same.</p></div>
-      <div class="feature"><span class="feature-icon">⚡</span><h3>Real-Time Multiplayer</h3><p>Socket.io powered — everyone sees the same timer, scores update live, results appear instantly.</p></div>
-    </div>
-  </section>
-
-  <!-- BOTTOM CTA -->
-  <div class="cta-section fade-in">
-    <div class="section-tag" style="margin-bottom:12px;">Ready?</div>
-    <h2 class="section-title" style="margin-bottom:24px;">Are You a Challenge Champion?</h2>
-    <a class="btn-play" href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener">
-      ▶ PLAY NOW — FREE
-    </a>
-    <p style="margin-top:16px; color:#334155; font-size:0.8rem;">
-      Opens in a new tab &bull;
-      <a href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener" style="color:var(--cyan)">
-        talented-benevolence-production-5242.up.railway.app
-      </a>
-    </p>
-  </div>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-logo">CHALLENGE.IO</div>
-    <p>Open source &bull; <a href="https://github.com/Gamergirllove/the-challenge-game" target="_blank" rel="noopener">GitHub</a> &bull; Built with Node.js + Socket.io</p>
-    <p style="margin-top:8px;">Are you a Challenge Champion?</p>
-  </footer>
 
   <script>
-    // Auto-open game in new tab after countdown
-    let count = 5;
-    const el = document.getElementById('countdown');
-    const timer = setInterval(() => {
-      count--;
-      if (el) el.textContent = count;
-      if (count <= 0) {
-        clearInterval(timer);
-        window.open('https://talented-benevolence-production-5242.up.railway.app', '_blank', 'noopener,noreferrer');
+    const GAME_URL = 'https://talented-benevolence-production-5242.up.railway.app';
+
+    // Countdown + auto-open
+    let n = 5;
+    const cd = document.getElementById('countdown');
+    const t = setInterval(() => {
+      n--;
+      cd.textContent = n;
+      if (n <= 0) {
+        clearInterval(t);
+        cd.closest('.countdown-line').textContent = 'Game launched in new tab!';
+        window.open(GAME_URL, '_blank', 'noopener,noreferrer');
       }
     }, 1000);
 
-    // Fade-in on scroll
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    // Shirt SVG
+    function shirtSVG(wins) {
+      const tiers = [
+        { min:0,  max:0,  fill:'#64748b', stroke:'#94a3b8' },
+        { min:1,  max:2,  fill:'#7c4a1e', stroke:'#cd7f32' },
+        { min:3,  max:4,  fill:'#6b7280', stroke:'#c0c0c0' },
+        { min:5,  max:9,  fill:'#92610a', stroke:'#ffd700' },
+        { min:10, max:999,fill:'url(#cg)', stroke:'#f5c518' },
+      ];
+      const tier = tiers.find(t => wins >= t.min && wins <= t.max) || tiers[0];
+      const star = wins >= 10 ? `<text x="50" y="68" text-anchor="middle" font-size="18" fill="#f5c518">★</text>` : `<text x="50" y="68" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.6)" font-family="sans-serif">${wins}</text>`;
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <defs><linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f5c518"/><stop offset="100%" stop-color="#fff7a0"/></linearGradient></defs>
+        <path d="M18,3 L26,15 Q37,20 50,22 Q63,20 74,15 L82,3 L100,22 L78,34 L78,98 L22,98 L22,34 L0,22 Z" fill="${tier.fill}" stroke="${tier.stroke}" stroke-width="2"/>
+        ${star}
+      </svg>`;
+    }
+
+    // Leaderboard
+    async function loadLeaderboard() {
+      const list = document.getElementById('lb-list');
+      try {
+        const res = await fetch(GAME_URL + '/api/leaderboard');
+        const data = await res.json();
+        if (!data.length) { list.innerHTML = '<div class="lb-empty">NO CHAMPIONS YET — BE THE FIRST</div>'; return; }
+        list.innerHTML = data.map((p, i) => {
+          const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+          return `<div class="lb-row ${cls}">
+            <div class="lb-rank">${medal}</div>
+            <div class="lb-shirt">${shirtSVG(p.wins)}</div>
+            <div class="lb-name">${p.name}</div>
+            <div class="lb-wins">${p.wins} WIN${p.wins !== 1 ? 'S' : ''}</div>
+            <div class="lb-games">${p.totalGames} games</div>
+          </div>`;
+        }).join('');
+      } catch {
+        list.innerHTML = '<div class="lb-empty">LEADERBOARD UNAVAILABLE</div>';
+      }
+    }
+
+    loadLeaderboard();
   </script>
 </body>
 </html>
