@@ -73,7 +73,6 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 8px;
-      text-shadow: none;
       filter: drop-shadow(0 0 40px rgba(245,197,24,0.4));
     }
 
@@ -94,29 +93,55 @@
       margin-bottom: 40px;
     }
 
+    /* ── PLAY BUTTON ── */
     .btn-play {
       display: inline-block;
       background: linear-gradient(135deg, var(--gold), #e6a800);
       color: #000;
       font-family: 'Orbitron', monospace;
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
       letter-spacing: 2px;
-      padding: 18px 48px;
+      padding: 22px 60px;
       border-radius: 8px;
       text-decoration: none;
       transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 0 30px rgba(245,197,24,0.5), 0 4px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 0 40px rgba(245,197,24,0.6), 0 4px 20px rgba(0,0,0,0.4);
+      cursor: pointer;
+      border: none;
+      animation: pulse 2s ease-in-out infinite;
     }
     .btn-play:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 0 50px rgba(245,197,24,0.7), 0 8px 30px rgba(0,0,0,0.5);
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 0 60px rgba(245,197,24,0.8), 0 8px 30px rgba(0,0,0,0.5);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(245,197,24,0.6), 0 4px 20px rgba(0,0,0,0.4); }
+      50%       { box-shadow: 0 0 70px rgba(245,197,24,0.9), 0 4px 20px rgba(0,0,0,0.4); }
     }
 
     .hero-note {
-      margin-top: 14px;
+      margin-top: 16px;
       font-size: 0.8rem;
       color: #475569;
+    }
+
+    /* ── COUNTDOWN ── */
+    .redirect-notice {
+      margin-top: 32px;
+      padding: 16px 28px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .redirect-notice strong {
+      color: var(--gold);
+      font-family: 'Orbitron', monospace;
+      font-size: 1.2rem;
     }
 
     /* ── STATS BAR ── */
@@ -238,12 +263,11 @@
       line-height: 1.6;
     }
 
-    /* ── GAME GRID ── */
+    /* ── GAMES ── */
     .game-divider {
       width: 100%;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--border), transparent);
-      margin: 0;
     }
 
     .games-section {
@@ -251,10 +275,7 @@
       padding: 80px 20px;
     }
 
-    .games-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .games-inner { max-width: 1100px; margin: 0 auto; }
 
     .games-grid {
       display: grid;
@@ -269,40 +290,19 @@
       padding: 18px 14px;
       text-align: center;
       transition: border-color 0.2s, transform 0.2s;
-      cursor: default;
     }
     .game-card:hover {
       border-color: var(--purple);
       transform: translateY(-3px);
     }
 
-    .game-icon {
-      font-size: 1.8rem;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .game-name {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #cbd5e1;
-      letter-spacing: 0.5px;
-    }
-
-    .game-type {
-      font-size: 0.65rem;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 4px;
-    }
-
+    .game-icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+    .game-name { font-size: 0.8rem; font-weight: 600; color: #cbd5e1; }
+    .game-type { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
     .daily-tag { color: var(--gold); }
     .arena-tag { color: #ef4444; }
 
     /* ── SHIRT TIERS ── */
-    .tiers-section { background: var(--bg); }
-
     .tiers-grid {
       display: flex;
       gap: 16px;
@@ -322,40 +322,16 @@
       transition: transform 0.2s;
     }
     .tier-card:hover { transform: translateY(-4px); }
+    .tier-shirt { font-size: 2.4rem; margin-bottom: 10px; display: block; }
+    .tier-name { font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+    .tier-wins { font-size: 0.75rem; color: #475569; }
+    .tier-rookie   { border-top: 3px solid #94a3b8; } .tier-rookie   .tier-name { color: #94a3b8; }
+    .tier-bronze   { border-top: 3px solid #cd7f32; } .tier-bronze   .tier-name { color: #cd7f32; }
+    .tier-silver   { border-top: 3px solid #c0c0c0; } .tier-silver   .tier-name { color: #c0c0c0; }
+    .tier-gold     { border-top: 3px solid #ffd700; } .tier-gold     .tier-name { color: #ffd700; }
+    .tier-champion { border-top: 3px solid #f5c518; box-shadow: 0 0 20px rgba(245,197,24,0.2); } .tier-champion .tier-name { color: var(--gold); }
 
-    .tier-shirt {
-      font-size: 2.4rem;
-      margin-bottom: 10px;
-      display: block;
-    }
-
-    .tier-name {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .tier-wins {
-      font-size: 0.75rem;
-      color: #475569;
-    }
-
-    .tier-rookie    { border-top: 3px solid #94a3b8; }
-    .tier-bronze    { border-top: 3px solid #cd7f32; }
-    .tier-silver    { border-top: 3px solid #c0c0c0; }
-    .tier-gold      { border-top: 3px solid #ffd700; }
-    .tier-champion  { border-top: 3px solid #f5c518; box-shadow: 0 0 20px rgba(245,197,24,0.2); }
-
-    .tier-rookie  .tier-name { color: #94a3b8; }
-    .tier-bronze  .tier-name { color: #cd7f32; }
-    .tier-silver  .tier-name { color: #c0c0c0; }
-    .tier-gold    .tier-name { color: #ffd700; }
-    .tier-champion .tier-name { color: var(--gold); }
-
-    /* ── FEATURE COLUMNS ── */
+    /* ── FEATURES ── */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -370,49 +346,16 @@
       transition: border-color 0.2s;
     }
     .feature:hover { border-color: var(--cyan); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
+    .feature h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .feature p { font-size: 0.88rem; color: #64748b; line-height: 1.6; }
 
-    .feature-icon {
-      font-size: 1.8rem;
-      margin-bottom: 14px;
-      display: block;
-    }
-
-    .feature h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .feature p {
-      font-size: 0.88rem;
-      color: #64748b;
-      line-height: 1.6;
-    }
-
-    /* ── EMBED SECTION ── */
-    .embed-section {
-      background: linear-gradient(180deg, var(--bg) 0%, #0d0d18 100%);
-      padding: 80px 20px;
+    /* ── BOTTOM CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, #0d0d18 0%, #120a00 50%, #0d0d18 100%);
+      padding: 100px 20px;
       text-align: center;
-    }
-
-    .embed-wrapper {
-      display: inline-block;
-      position: relative;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(245,197,24,0.15), 0 30px 60px rgba(0,0,0,0.6);
-      border: 1px solid var(--border);
-      max-width: 100%;
-    }
-
-    .embed-wrapper iframe {
-      display: block;
-      width: min(960px, calc(100vw - 40px));
-      height: min(600px, 60vw);
-      border: none;
-      min-height: 400px;
+      border-top: 1px solid var(--border);
     }
 
     /* ── FOOTER ── */
@@ -434,27 +377,16 @@
       margin-bottom: 12px;
     }
 
-    footer p {
-      font-size: 0.8rem;
-      color: #334155;
-    }
-
-    footer a {
-      color: var(--cyan);
-      text-decoration: none;
-    }
+    footer p { font-size: 0.8rem; color: #334155; }
+    footer a { color: var(--cyan); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    /* ── SCROLL ANIMATIONS ── */
     .fade-in {
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.6s ease, transform 0.6s ease;
     }
-    .fade-in.visible {
-      opacity: 1;
-      transform: none;
-    }
+    .fade-in.visible { opacity: 1; transform: none; }
   </style>
 </head>
 <body>
@@ -469,30 +401,25 @@
       head-to-head arena duels. Only one player earns the title of
       <strong style="color:var(--gold)">Challenge Champion</strong>.
     </p>
-    <a class="btn-play" href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener">
-      PLAY NOW — FREE
+
+    <a class="btn-play" id="play-btn" href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener">
+      ▶ PLAY NOW — FREE
     </a>
-    <p class="hero-note">Browser-based &bull; Up to 10 players per room &bull; Works on any device</p>
+
+    <p class="hero-note">Opens in a new tab &bull; Browser-based &bull; Up to 10 players &bull; Any device</p>
+
+    <div class="redirect-notice">
+      Auto-launching in <strong id="countdown">5</strong> seconds…
+      &nbsp;&nbsp;<a href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener" style="color:var(--cyan)">Click here if it doesn't open</a>
+    </div>
   </section>
 
   <!-- STATS BAR -->
   <div class="stats-bar">
-    <div class="stat-item">
-      <div class="stat-num">20</div>
-      <div class="stat-label">Mini-Games</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">10</div>
-      <div class="stat-label">Players per Room</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">5</div>
-      <div class="stat-label">Shirt Tiers</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">0</div>
-      <div class="stat-label">Downloads Needed</div>
-    </div>
+    <div class="stat-item"><div class="stat-num">20</div><div class="stat-label">Mini-Games</div></div>
+    <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">Players per Room</div></div>
+    <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">Shirt Tiers</div></div>
+    <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">Downloads Needed</div></div>
   </div>
 
   <!-- HOW IT WORKS -->
@@ -503,27 +430,26 @@
       Each game cycle puts your reflexes, strategy, and social skills to the test.
       Score high, dodge the vote, win the arena — or go home.
     </p>
-
     <div class="steps">
       <div class="step">
         <div class="step-num">01</div>
         <h3>Daily Mini-Game</h3>
-        <p>All players compete simultaneously in a randomly chosen mini-game. Top scorers earn safety. The bottom player faces elimination risk.</p>
+        <p>All players compete simultaneously. Top scorers earn safety. The bottom player faces elimination risk.</p>
       </div>
       <div class="step">
         <div class="step-num">02</div>
         <h3>The Discussion</h3>
-        <p>Chat with rivals. Form alliances. Drop hints or misdirect. This is where the social game unfolds before voting locks in.</p>
+        <p>Chat with rivals. Form alliances. Drop hints or misdirect. 60 seconds before the vote locks in.</p>
       </div>
       <div class="step">
         <div class="step-num">03</div>
         <h3>The Vote</h3>
-        <p>Players vote for who they want to face in the arena. The two highest-voted players go head-to-head.</p>
+        <p>Players vote for who they want to face in the arena. The two most-voted players go head-to-head.</p>
       </div>
       <div class="step">
         <div class="step-num">04</div>
         <h3>Arena Duel</h3>
-        <p>Two players battle in a tougher arena-exclusive game. Loser is eliminated. Winner stays and earns a Career Win.</p>
+        <p>A head-to-head battle in a harder game. Loser is eliminated. Winner earns a Career Win.</p>
       </div>
     </div>
   </section>
@@ -534,13 +460,10 @@
     <div class="games-inner fade-in">
       <div class="section-tag">Mini-Games</div>
       <h2 class="section-title">20 Games. Zero Mercy.</h2>
-      <p class="section-lead">
-        Daily games test everyone equally. Arena games are designed to be harder — because everything's on the line.
-      </p>
-
+      <p class="section-lead">Daily games test everyone equally. Arena games are designed to be harder — because everything's on the line.</p>
       <div class="games-grid">
         <div class="game-card"><span class="game-icon">🧠</span><div class="game-name">Memory Matrix</div><div class="game-type daily-tag">Daily</div></div>
-        <div class="game-card"><span class="game-icon">+</span><div class="game-name">Quick Math</div><div class="game-type daily-tag">Daily</div></div>
+        <div class="game-card"><span class="game-icon">➕</span><div class="game-name">Quick Math</div><div class="game-type daily-tag">Daily</div></div>
         <div class="game-card"><span class="game-icon">⚡</span><div class="game-name">Reaction Time</div><div class="game-type daily-tag">Daily</div></div>
         <div class="game-card"><span class="game-icon">🔢</span><div class="game-name">Number Hunt</div><div class="game-type daily-tag">Daily</div></div>
         <div class="game-card"><span class="game-icon">👆</span><div class="game-name">Tap Frenzy</div><div class="game-type daily-tag">Daily</div></div>
@@ -564,41 +487,17 @@
   </div>
   <div class="game-divider"></div>
 
-  <!-- SHIRT AVATAR TIERS -->
-  <section class="tiers-section fade-in">
+  <!-- SHIRT TIERS -->
+  <section class="fade-in">
     <div class="section-tag">Progression</div>
     <h2 class="section-title">Earn Your Shirt</h2>
-    <p class="section-lead">
-      Every arena win upgrades your shirt. Rookies wear grey. Champions wear gold — and earn a star for every 10 wins.
-      Your shirt follows you across every game room.
-    </p>
-
+    <p class="section-lead">Every arena win upgrades your shirt. Rookies wear grey. Champions wear gold — and earn a star every 10 wins.</p>
     <div class="tiers-grid">
-      <div class="tier-card tier-rookie">
-        <span class="tier-shirt">👕</span>
-        <div class="tier-name">Rookie</div>
-        <div class="tier-wins">0 wins</div>
-      </div>
-      <div class="tier-card tier-bronze">
-        <span class="tier-shirt">👕</span>
-        <div class="tier-name">Bronze</div>
-        <div class="tier-wins">1–2 wins</div>
-      </div>
-      <div class="tier-card tier-silver">
-        <span class="tier-shirt">👕</span>
-        <div class="tier-name">Silver</div>
-        <div class="tier-wins">3–4 wins</div>
-      </div>
-      <div class="tier-card tier-gold">
-        <span class="tier-shirt">👕</span>
-        <div class="tier-name">Gold</div>
-        <div class="tier-wins">5–9 wins</div>
-      </div>
-      <div class="tier-card tier-champion">
-        <span class="tier-shirt">⭐</span>
-        <div class="tier-name">Champion</div>
-        <div class="tier-wins">10+ wins</div>
-      </div>
+      <div class="tier-card tier-rookie"><span class="tier-shirt">👕</span><div class="tier-name">Rookie</div><div class="tier-wins">0 wins</div></div>
+      <div class="tier-card tier-bronze"><span class="tier-shirt">👕</span><div class="tier-name">Bronze</div><div class="tier-wins">1–2 wins</div></div>
+      <div class="tier-card tier-silver"><span class="tier-shirt">👕</span><div class="tier-name">Silver</div><div class="tier-wins">3–4 wins</div></div>
+      <div class="tier-card tier-gold"><span class="tier-shirt">👕</span><div class="tier-name">Gold</div><div class="tier-wins">5–9 wins</div></div>
+      <div class="tier-card tier-champion"><span class="tier-shirt">⭐</span><div class="tier-name">Champion</div><div class="tier-wins">10+ wins</div></div>
     </div>
   </section>
 
@@ -608,55 +507,25 @@
     <div class="section-tag">Features</div>
     <h2 class="section-title">Built Different</h2>
     <p class="section-lead">Everything you need for a competitive, social, replayable experience — no install required.</p>
-
     <div class="features-grid">
-      <div class="feature">
-        <span class="feature-icon">🏆</span>
-        <h3>Hall of Champions</h3>
-        <p>A persistent global leaderboard tracks career wins across all games. Earn your spot at the top and defend it.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🔗</span>
-        <h3>Instant Room Codes</h3>
-        <p>Create a room in one click, share a 6-digit code with friends. No accounts required — play as guest anytime.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🎭</span>
-        <h3>Social Deduction Layer</h3>
-        <p>Discussion phase and strategic voting turn every round into a psychological battle. Allies become threats.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">📱</span>
-        <h3>Works Everywhere</h3>
-        <p>Runs in any modern browser on desktop, tablet, or phone. Host on your PC, join from your couch.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">🔄</span>
-        <h3>Always Different</h3>
-        <p>Random game selection from two separate pools means no two sessions play the same way.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">⚡</span>
-        <h3>Real-Time Multiplayer</h3>
-        <p>Powered by Socket.io — everyone sees the same timer, scores update live, and results appear instantly.</p>
-      </div>
+      <div class="feature"><span class="feature-icon">🏆</span><h3>Hall of Champions</h3><p>A persistent global leaderboard tracks career wins. Earn your spot and defend it.</p></div>
+      <div class="feature"><span class="feature-icon">🔗</span><h3>Instant Room Codes</h3><p>Create a room in one click, share a 6-letter code. No accounts required — guest play anytime.</p></div>
+      <div class="feature"><span class="feature-icon">🎭</span><h3>Social Deduction</h3><p>Discussion and voting turn every round into a psychological battle. Allies become threats.</p></div>
+      <div class="feature"><span class="feature-icon">📱</span><h3>Works Everywhere</h3><p>Any modern browser on desktop, tablet, or phone. Host on PC, join from your couch.</p></div>
+      <div class="feature"><span class="feature-icon">🔄</span><h3>Always Different</h3><p>Random selection from two separate game pools means no two sessions play the same.</p></div>
+      <div class="feature"><span class="feature-icon">⚡</span><h3>Real-Time Multiplayer</h3><p>Socket.io powered — everyone sees the same timer, scores update live, results appear instantly.</p></div>
     </div>
   </section>
 
-  <!-- LIVE EMBED -->
-  <div class="embed-section fade-in">
-    <div class="section-tag" style="margin-bottom:12px;">Play Right Here</div>
-    <h2 class="section-title" style="margin-bottom:24px;">Jump In Now</h2>
-    <div class="embed-wrapper">
-      <iframe
-        src="https://talented-benevolence-production-5242.up.railway.app"
-        title="Challenge.io — Live Game"
-        allow="fullscreen"
-        loading="lazy"
-      ></iframe>
-    </div>
+  <!-- BOTTOM CTA -->
+  <div class="cta-section fade-in">
+    <div class="section-tag" style="margin-bottom:12px;">Ready?</div>
+    <h2 class="section-title" style="margin-bottom:24px;">Are You a Challenge Champion?</h2>
+    <a class="btn-play" href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener">
+      ▶ PLAY NOW — FREE
+    </a>
     <p style="margin-top:16px; color:#334155; font-size:0.8rem;">
-      Full-screen experience at
+      Opens in a new tab &bull;
       <a href="https://talented-benevolence-production-5242.up.railway.app" target="_blank" rel="noopener" style="color:var(--cyan)">
         talented-benevolence-production-5242.up.railway.app
       </a>
@@ -666,20 +535,27 @@
   <!-- FOOTER -->
   <footer>
     <div class="footer-logo">CHALLENGE.IO</div>
-    <p>
-      Open source &bull;
-      <a href="https://github.com/Gamergirllove/the-challenge-game" target="_blank" rel="noopener">GitHub</a>
-      &bull; Built with Node.js + Socket.io
-    </p>
+    <p>Open source &bull; <a href="https://github.com/Gamergirllove/the-challenge-game" target="_blank" rel="noopener">GitHub</a> &bull; Built with Node.js + Socket.io</p>
     <p style="margin-top:8px;">Are you a Challenge Champion?</p>
   </footer>
 
   <script>
+    // Auto-open game in new tab after countdown
+    let count = 5;
+    const el = document.getElementById('countdown');
+    const timer = setInterval(() => {
+      count--;
+      if (el) el.textContent = count;
+      if (count <= 0) {
+        clearInterval(timer);
+        window.open('https://talented-benevolence-production-5242.up.railway.app', '_blank', 'noopener,noreferrer');
+      }
+    }, 1000);
+
     // Fade-in on scroll
     const observer = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
-
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
   </script>
 </body>
