@@ -48,11 +48,58 @@ html, body {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse at 50% 30%, rgba(232,25,44,.25) 0%, transparent 70%);
 }
-.landing-content {
+.landing-layout {
   position: relative; z-index: 1;
+  display: flex; flex-direction: row;
+  height: 100%; overflow: hidden;
+}
+.landing-sidebar {
+  width: 260px; flex-shrink: 0;
+  background: rgba(0,0,0,.5);
+  border-right: 1px solid rgba(255,255,255,.07);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  font-family: var(--font-title); font-size: 1rem; letter-spacing: .2em;
+  color: var(--gold); padding: 1rem 1rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  flex-shrink: 0; text-align: center;
+}
+.sidebar-lb-list {
+  flex: 1; overflow-y: auto; padding: .5rem;
+  display: flex; flex-direction: column; gap: .4rem;
+}
+.sidebar-lb-loading {
+  text-align: center; color: var(--muted);
+  font-size: .8rem; letter-spacing: .2em; padding: 2rem 0;
+}
+.sidebar-lb-row {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .6rem; border-radius: 8px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.05);
+  transition: border-color .15s;
+}
+.sidebar-lb-row:hover { border-color: rgba(245,197,24,.25); }
+.sidebar-lb-row.slb-top1 { border-color: rgba(255,215,0,.4); background: rgba(255,215,0,.06); }
+.sidebar-lb-row.slb-top2 { border-color: rgba(192,192,192,.3); }
+.sidebar-lb-row.slb-top3 { border-color: rgba(205,127,50,.3); }
+.sidebar-lb-rank {
+  font-family: var(--font-title); font-size: .9rem; color: var(--muted);
+  width: 22px; text-align: center; flex-shrink: 0;
+}
+.sidebar-lb-row.slb-top1 .sidebar-lb-rank { color: #ffd700; }
+.sidebar-lb-row.slb-top2 .sidebar-lb-rank { color: #c0c0c0; }
+.sidebar-lb-row.slb-top3 .sidebar-lb-rank { color: #cd7f32; }
+.sidebar-lb-shirt { width: 30px; height: 30px; flex-shrink: 0; }
+.sidebar-lb-name { flex: 1; font-family: var(--font-title); font-size: .85rem; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-lb-wins { font-family: var(--font-title); font-size: .8rem; color: var(--gold); flex-shrink: 0; }
+
+.landing-content {
+  flex: 1; overflow-y: auto;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  height: 100%; gap: 2rem; padding: 1rem;
+  gap: 2rem; padding: 1rem;
 }
 .logo { text-align: center; line-height: 1.1; }
 .logo-wordmark {
@@ -782,4 +829,85 @@ html, body {
    ============================================================ */
 .results-player-row {
   display: flex; align-items: center; gap: .75rem;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+
+  /* Hide sidebar on mobile — use 🏆 button instead */
+  .landing-sidebar { display: none; }
+  .landing-layout { flex-direction: column; }
+
+  /* Landing */
+  .logo-wordmark { font-size: clamp(2.8rem, 14vw, 5rem); }
+  .logo-sub { font-size: .7rem; letter-spacing: .25em; }
+  .landing-card { padding: 1.25rem; }
+  .input-field { font-size: 1.1rem; padding: .75rem .9rem; }
+  .btn { font-size: 1.1rem; padding: .65rem 1rem; }
+  .btn-xl { font-size: 1.3rem; padding: .85rem 1.5rem; }
+  .join-row { flex-direction: column; }
+  .join-row .btn { width: 100%; }
+
+  /* Auth */
+  .auth-card { padding: 1.5rem 1.25rem; }
+  .auth-tab { font-size: .95rem; }
+
+  /* Lobby */
+  .lobby-header { padding: .75rem 1rem; flex-wrap: wrap; gap: .5rem; }
+  .logo-small { font-size: 1.2rem; }
+  .code-value { font-size: 1.5rem; }
+  .players-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .lobby-player-name { font-size: .8rem; }
+
+  /* Game topbar */
+  .game-topbar { padding: .4rem .75rem; }
+  .puzzle-label { font-size: 1rem; }
+  .timer-ring { width: 44px; height: 44px; }
+  .timer-val { font-size: 1.1rem; }
+
+  /* Puzzle area */
+  .puzzle-area { padding: .5rem; }
+
+  /* Discussion + Voting — stack vertically */
+  .discussion-screen,
+  .voting-screen { flex-direction: column !important; }
+  .discussion-left,
+  .voting-left { min-height: auto; max-height: 50%; overflow-y: auto; }
+  .chat-panel { height: 50%; min-height: 200px; }
+  .disc-title { font-size: 1.4rem; }
+  .disc-hint { font-size: .8rem; }
+  .callout-name { font-size: 1.8rem; }
+  .vote-buttons { flex-wrap: wrap; gap: .4rem; }
+
+  /* Phase overlays */
+  .phase-title { font-size: clamp(1.8rem, 8vw, 3rem); }
+  .phase-puzzle-name { font-size: clamp(1.5rem, 6vw, 2.5rem); }
+  .arena-logo { font-size: clamp(2.5rem, 10vw, 5rem); }
+
+  /* Arena topbar */
+  .arena-topbar { padding: .4rem .5rem; gap: .4rem; }
+  .arena-pname { font-size: .75rem; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .timer-ring-lg { width: 52px; height: 52px; }
+
+  /* Results */
+  .results-header { padding: 1rem; }
+  .results-title { font-size: 1.8rem; }
+  .results-list { padding: 0 .75rem; }
+
+  /* Spectator */
+  .spec-body { flex-direction: column; }
+  .spec-left, .spec-right { width: 100%; }
+
+  /* Game over */
+  .go-winner { font-size: clamp(2.5rem, 12vw, 6rem); }
+
+  /* Leaderboard */
+  .lb-list { padding: .75rem; }
+  .lb-row { padding: .6rem .75rem; gap: .5rem; }
+  .lb-name { font-size: .95rem; }
+
+  /* Modal */
+  .modal-card { margin: 1rem; padding: 1.5rem; }
 }

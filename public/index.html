@@ -48,33 +48,46 @@
 <!-- =============== LANDING =============== -->
 <div id="screen-landing" class="screen">
   <div class="landing-bg"></div>
-  <div class="landing-content">
-    <div class="logo">
-      <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
-      <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
-    </div>
-    <!-- Player identity bar -->
-    <div class="player-identity" id="player-identity" style="display:none">
-      <div id="identity-shirt"></div>
-      <div class="identity-info">
-        <div class="identity-name" id="identity-name"></div>
-        <div class="identity-stats" id="identity-stats"></div>
+  <div class="landing-layout">
+
+    <!-- Sidebar: Hall of Champions -->
+    <aside class="landing-sidebar">
+      <div class="sidebar-header">🏆 HALL OF CHAMPIONS</div>
+      <div id="sidebar-lb" class="sidebar-lb-list">
+        <div class="sidebar-lb-loading">LOADING…</div>
       </div>
-      <button class="btn-icon" id="btn-leaderboard" title="Hall of Champions">🏆</button>
-      <button class="btn-icon" id="btn-logout" title="Logout">🚪</button>
-    </div>
-    <div class="landing-card">
-      <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
-      <div class="landing-buttons">
-        <button class="btn btn-primary" id="btn-create">CREATE GAME</button>
-        <div class="or-divider">— OR —</div>
-        <div class="join-row">
-          <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
-          <button class="btn btn-secondary" id="btn-join">JOIN</button>
+    </aside>
+
+    <!-- Main content -->
+    <div class="landing-content">
+      <div class="logo">
+        <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
+        <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
+      </div>
+      <!-- Player identity bar -->
+      <div class="player-identity" id="player-identity" style="display:none">
+        <div id="identity-shirt"></div>
+        <div class="identity-info">
+          <div class="identity-name" id="identity-name"></div>
+          <div class="identity-stats" id="identity-stats"></div>
         </div>
+        <button class="btn-icon" id="btn-leaderboard" title="Hall of Champions">🏆</button>
+        <button class="btn-icon" id="btn-logout" title="Logout">🚪</button>
       </div>
-      <div id="landing-error" class="error-msg"></div>
+      <div class="landing-card">
+        <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
+        <div class="landing-buttons">
+          <button class="btn btn-primary" id="btn-create">CREATE GAME</button>
+          <div class="or-divider">— OR —</div>
+          <div class="join-row">
+            <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
+            <button class="btn btn-secondary" id="btn-join">JOIN</button>
+          </div>
+        </div>
+        <div id="landing-error" class="error-msg"></div>
+      </div>
     </div>
+
   </div>
 </div>
 

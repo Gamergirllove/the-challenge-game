@@ -223,7 +223,7 @@
       ▶ PLAY NOW
     </a>
     <div class="launch-note">Free to play &bull; No download &bull; Up to 10 players</div>
-    <div class="countdown-line">Opening in <span id="countdown">5</span>s…</div>
+    <div class="launch-note" style="font-size:0.75rem;color:#334155;">Opens in a new tab</div>
   </div>
 
   <div class="divider"></div>
@@ -236,19 +236,6 @@
 
   <script>
     const GAME_URL = 'https://talented-benevolence-production-5242.up.railway.app';
-
-    // Countdown + auto-open
-    let n = 5;
-    const cd = document.getElementById('countdown');
-    const t = setInterval(() => {
-      n--;
-      cd.textContent = n;
-      if (n <= 0) {
-        clearInterval(t);
-        cd.closest('.countdown-line').textContent = 'Game launched in new tab!';
-        window.open(GAME_URL, '_blank', 'noopener,noreferrer');
-      }
-    }, 1000);
 
     // Shirt SVG
     function shirtSVG(wins) {

@@ -22,6 +22,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
+  if (id === 'screen-landing') loadSidebarLeaderboard();
 }
 
 // ── Toast ──────────────────────────────────────────────────
@@ -811,6 +812,28 @@ async function showLeaderboard() {
       </div>`;
     }).join('');
   } catch { list.innerHTML = `<div class="lb-empty">Could not load leaderboard.</div>`; }
+}
+
+// ── Sidebar leaderboard ──────────────────────────────────────
+async function loadSidebarLeaderboard() {
+  const list = $('sidebar-lb');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/leaderboard');
+    const board = await res.json();
+    if (!board.length) { list.innerHTML = `<div class="sidebar-lb-loading">NO CHAMPIONS YET</div>`; return; }
+    list.innerHTML = board.slice(0, 20).map((p, i) => {
+      const rank = i + 1;
+      const cls = rank === 1 ? 'slb-top1' : rank === 2 ? 'slb-top2' : rank === 3 ? 'slb-top3' : '';
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+      return `<div class="sidebar-lb-row ${cls}">
+        <div class="sidebar-lb-rank">${medal}</div>
+        <div class="sidebar-lb-shirt">${renderShirtSVG(p.wins, 30)}</div>
+        <div class="sidebar-lb-name">${escHtml(p.name)}</div>
+        <div class="sidebar-lb-wins">${p.wins}W</div>
+      </div>`;
+    }).join('');
+  } catch { list.innerHTML = `<div class="sidebar-lb-loading">UNAVAILABLE</div>`; }
 }
 
 // ── Boot sequence ────────────────────────────────────────────
