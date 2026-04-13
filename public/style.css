@@ -820,7 +820,7 @@ html, body {
    LEADERBOARD SCREEN
    ============================================================ */
 #screen-leaderboard {
-  display: flex; flex-direction: column; gap: 0;
+  flex-direction: column; gap: 0;
   background: var(--dark1); overflow-y: auto;
 }
 .lb-header {
