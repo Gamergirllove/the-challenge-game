@@ -165,25 +165,31 @@
 
 <!-- =============== DISCUSSION =============== -->
 <div id="screen-discussion" class="screen discussion-screen">
-  <div class="discussion-left">
-    <div class="disc-header">
+  <!-- Top info bar -->
+  <div class="disc-topbar">
+    <div class="disc-topbar-left">
       <div class="disc-title">🗣 DELIBERATION</div>
-      <div class="timer-ring timer-ring-sm"><span class="timer-val" id="disc-timer">60</span></div>
+      <div class="disc-hint">Who do you send against them? Make your case.</div>
     </div>
-    <div class="arena-callout" id="disc-arena-player">
+    <div class="arena-callout disc-callout-inline" id="disc-arena-player">
       <div class="callout-label">AUTO IN THE ARENA</div>
       <div class="callout-name" id="disc-last-name"></div>
     </div>
-    <div class="disc-hint">Who do you send against them?<br/>You have 60 seconds — make your case.</div>
-    <div class="players-mini" id="disc-players-list"></div>
+    <div class="timer-ring timer-ring-sm"><span class="timer-val" id="disc-timer">60</span></div>
   </div>
-  <div class="chat-panel">
-    <div class="chat-header">LIVE CHAT</div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input-row">
-      <input id="chat-input" class="chat-input" type="text" placeholder="Say something…" maxlength="200" autocomplete="off"/>
-      <button class="chat-send-btn" id="chat-send">SEND</button>
+  <!-- Body: chat (main) + players sidebar -->
+  <div class="disc-body">
+    <div class="chat-panel">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input id="chat-input" class="chat-input" type="text" placeholder="Say something…" maxlength="200" autocomplete="off"/>
+        <button class="chat-send-btn" id="chat-send">SEND</button>
+      </div>
     </div>
+    <aside class="disc-players-sidebar">
+      <div class="disc-sidebar-title">PLAYERS</div>
+      <div class="players-mini" id="disc-players-list"></div>
+    </aside>
   </div>
 </div>
 
