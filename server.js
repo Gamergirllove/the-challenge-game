@@ -260,7 +260,7 @@ const PUZZLE_NAMES = {
   numberhunt:    '🎯 Number Hunt',
   tapfrenzy:     '👆 Tap Frenzy',
   fastfingers:   '⌨ Fast Fingers',
-  gridlock:      '🔍 Grid Lock',
+  gridlock:      '🚗 Rush Hour',
   speedsort:     '⬆ Speed Sort',
   findbomb:      '💣 Find the Bomb',
   mathrace:      '🏎 Math Race',
@@ -404,20 +404,48 @@ function makePuzzle(type) {
       const words = shuffle(wordLists)[0];
       return { type, words };
     }
-    // ── ARENA: GRID LOCK ──────────────────────────────────
+    // ── ARENA: RUSH HOUR — slide cars to free the red car ────
     case 'gridlock': {
-      const operators = ['+','-','×'];
-      const rounds_data = Array.from({length:6}, () => {
-        const op = operators[Math.floor(Math.random()*operators.length)];
-        let a = Math.floor(Math.random()*9)+2, b = Math.floor(Math.random()*9)+2;
-        let target; if(op==='+') target=a+b; else if(op==='-') target=a-b; else target=a*b;
-        const answers = [String(target)];
-        const distractors = shuffle([target-1,target+1,target-2,target+2,target*2,Math.floor(target/2)].filter(n=>n!==target&&n>0)).slice(0,11).map(String);
-        const grid = shuffle([...answers,...distractors]).slice(0,12);
-        if(!grid.includes(String(target))) grid[0] = String(target);
-        return { target:`${a} ${op} ${b} = ?`, grid: shuffle(grid), answers };
-      });
-      return { type, rounds: 6, rounds_data };
+      // Each puzzle: cars = [{id,row,col,len,h,target}]
+      // Grid 6×6. Target (red) car is horizontal in row 2; exits right (col+len-1 === 5).
+      const PUZZLES = [
+        // Puzzle 0 — Easy (~7 clicks): A down 3, R right
+        { cars: [
+          { id:0, row:2, col:1, len:2, h:true,  target:true  },
+          { id:1, row:0, col:3, len:3, h:false, target:false },
+          { id:2, row:3, col:0, len:2, h:true,  target:false },
+          { id:3, row:4, col:4, len:2, h:false, target:false },
+        ]},
+        // Puzzle 1 — Medium (~9 clicks): B left 2, A down 2, R right
+        { cars: [
+          { id:0, row:2, col:1, len:2, h:true,  target:true  },
+          { id:1, row:1, col:3, len:3, h:false, target:false },
+          { id:2, row:4, col:2, len:3, h:true,  target:false },
+          { id:3, row:0, col:4, len:2, h:true,  target:false },
+          { id:4, row:1, col:0, len:2, h:false, target:false },
+        ]},
+        // Puzzle 2 — Hard (~10 clicks): D left 1, A down 3, C down 1, R right
+        { cars: [
+          { id:0, row:2, col:0, len:2, h:true,  target:true  },
+          { id:1, row:0, col:2, len:3, h:false, target:false },
+          { id:2, row:2, col:3, len:2, h:false, target:false },
+          { id:3, row:5, col:1, len:2, h:true,  target:false },
+          { id:4, row:0, col:3, len:2, h:true,  target:false },
+          { id:5, row:4, col:0, len:2, h:false, target:false },
+        ]},
+        // Puzzle 3 — Expert (~13 clicks): E left 3, D down 1, C down 2, A up 2, R right
+        { cars: [
+          { id:0, row:2, col:0, len:2, h:true,  target:true  },
+          { id:1, row:2, col:2, len:2, h:false, target:false },
+          { id:2, row:0, col:3, len:2, h:true,  target:false },
+          { id:3, row:1, col:3, len:2, h:false, target:false },
+          { id:4, row:2, col:4, len:2, h:false, target:false },
+          { id:5, row:4, col:4, len:2, h:true,  target:false },
+          { id:6, row:0, col:0, len:2, h:false, target:false },
+        ]},
+      ];
+      const p = PUZZLES[Math.floor(Math.random() * PUZZLES.length)];
+      return { type, cars: p.cars, gridSize: 6, exitRow: 2 };
     }
     // ── ARENA: SPEED SORT ─────────────────────────────────
     case 'speedsort': {
@@ -485,7 +513,7 @@ function calcScore(type, result, ms) {
     case 'minesweeper':   return Math.min(1000, (result.safe||0) * 40 + timeBonus(200, 200));
     case 'tapfrenzy':     return Math.min(1000, (result.taps||0) * 8);
     case 'fastfingers':   return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 10)));
-    case 'gridlock':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
+    case 'gridlock':      return result.solved ? Math.max(200, 1000 - (result.moves||0) * 35) + timeBonus(150, 500) : 0;
     case 'speedsort':     return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 5)));
     case 'findbomb':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
     case 'mathrace':      return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
