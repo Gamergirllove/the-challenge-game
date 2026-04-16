@@ -383,7 +383,7 @@ window.Puzzles = {
   // ARENA: TAP FRENZY — tap the most times in 30 seconds
   // ──────────────────────────────────────────────────────────
   tapfrenzy(container, data, onComplete, onProgress) {
-    let taps = 0, running = false, timeLeft = 30, interval = null;
+    const gameSecs = data.timeLimit || 30; let taps = 0, running = false, timeLeft = gameSecs, interval = null;
     container.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;gap:1.25rem;width:100%;max-width:420px">
         <div style="font-family:var(--font-title);font-size:1.8rem;color:var(--gold);letter-spacing:.15em">👆 TAP FRENZY</div>
@@ -420,9 +420,9 @@ window.Puzzles = {
           running = false;
           btn.disabled = true;
           btn.style.opacity = '.5';
-          const tps = (taps / 30).toFixed(1);
+          const tps = (taps / gameSecs).toFixed(1);
           if (resultEl) resultEl.textContent = `${taps} taps · ${tps} per second`;
-          onComplete({ result: { taps }, timeMs: 30000 });
+          onComplete({ result: { taps }, timeMs: gameSecs * 1000 });
         }
       }, 1000);
     }
@@ -1125,7 +1125,7 @@ window.Puzzles = {
       if(inWindow) {
         jumps++;
         container.querySelector('#jr-jumps').textContent = jumps;
-        if(onProgress) onProgress(Math.floor((jumps / (duration/beatMs)) * 900));
+        const expectedJumps = data.totalJumps || Math.round(duration / beatMs); if(onProgress) onProgress(Math.min(900, Math.floor((jumps / expectedJumps) * 900)));
       } else {
         misses++;
         container.querySelector('#jr-misses').textContent = misses;
@@ -1624,7 +1624,7 @@ window.Puzzles = {
               selected=-1; locked=true;
               grid[a]=-1; grid[b]=-1;
               pairs++;
-              if(onProgress) onProgress(Math.min(900,pairs*28));
+              if(onProgress) onProgress(Math.min(900, Math.round(pairs/18*900)));
               render();
               locked=false;
               if(grid.every(c=>c===-1)){ done=true; onComplete({result:{pairs},timeMs:Date.now()-startTime}); }

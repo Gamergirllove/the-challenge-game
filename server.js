@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs   = require('fs');
 const crypto = require('crypto');
+const { calcScore } = require('./scoring');
 
 const app = express();
 const server = http.createServer(app);
@@ -489,39 +490,6 @@ function makePuzzle(type) {
     case 'tunneldodge': {
       return { type, duration: 45000, seed: Math.floor(Math.random() * 99999) };
     }
-  }
-}
-
-// ============================================================
-// SCORING
-// ============================================================
-function calcScore(type, result, ms) {
-  const timeBonus = (max, cap) => Math.max(0, Math.min(max, max - Math.floor(ms / cap)));
-  switch (type) {
-    case 'memory':        return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 150)));
-    case 'quickmath':     return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'reaction':      return Math.max(0, Math.min(1000, 1000 - Math.floor(result.avgMs / 3)));
-    case 'wordscramble':  return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'colorseq':      return Math.min(1000, result.level * 100);
-    case 'trivia':        return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'tessellations': return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'numberhunt':    return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 5)));
-    case 'patternmatch':  return Math.floor((result.score||0) / (result.total||5) * 1000);
-    case 'emojisort':     return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'curling':       return Math.min(1000, (result.score||0) * 20);
-    case 'jumprope':      return Math.min(1000, (result.hits||0) * 50);
-    case 'minesweeper':   return Math.min(1000, (result.safe||0) * 40 + timeBonus(200, 200));
-    case 'tapfrenzy':     return Math.min(1000, (result.taps||0) * 8);
-    case 'fastfingers':   return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 10)));
-    case 'gridlock':      return result.solved ? Math.max(200, 1000 - (result.moves||0) * 35) + timeBonus(150, 500) : 0;
-    case 'speedsort':     return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 5)));
-    case 'findbomb':      return Math.floor((result.found/result.total)*700) + timeBonus(300, 300);
-    case 'mathrace':      return Math.floor((result.correct/result.total)*700) + timeBonus(300, 300);
-    case 'simonextreme':  return Math.min(1000, (result.level||0) * 100);
-    case 'tangram':       return Math.max(0, Math.min(1000, 1000 - Math.floor(ms / 200)));
-    case 'colormatch':    return Math.min(1000, (result.pairs||0) * 28);
-    case 'tunneldodge':   return Math.min(1000, (result.distance||0) * 4);
-    default: return 0;
   }
 }
 

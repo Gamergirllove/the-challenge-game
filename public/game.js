@@ -521,7 +521,7 @@ socket.on('game:phase', (data) => {
       $('daily-progress').textContent = '';
       showScreen('screen-daily');
       showTimerBar(data.timeLimit);
-      renderPuzzle('puzzle-area', 'puzzle-done-overlay', data.puzzleType, data.puzzleData);
+      renderPuzzle('puzzle-area', 'puzzle-done-overlay', data.puzzleType, {...data.puzzleData, timeLimit: data.timeLimit});
       break;
     }
     case 'daily_results': {
@@ -593,7 +593,7 @@ socket.on('game:phase', (data) => {
       $('arena-done-overlay').style.display = 'none';
       $('arena-puzzle-area').innerHTML = '';
       if (amDueling) {
-        renderPuzzle('arena-puzzle-area', 'arena-done-overlay', data.duelType, data.puzzleData);
+        renderPuzzle('arena-puzzle-area', 'arena-done-overlay', data.duelType, {...data.puzzleData, timeLimit: data.timeLimit});
       } else {
         $('arena-watch-status').innerHTML = `<div>${escHtml(data.p1Name)} vs ${escHtml(data.p2Name)}</div><div style="margin-top:.5rem;font-size:.85rem;color:var(--muted)">Both players are fighting it out…</div>`;
       }
@@ -639,7 +639,7 @@ socket.on('game:phase', (data) => {
       $('finale-done-overlay').style.display = 'none';
       $('finale-puzzle-area').innerHTML = '';
       if (amPlaying) {
-        renderPuzzle('finale-puzzle-area', 'finale-done-overlay', data.gameType, data.puzzleData);
+        renderPuzzle('finale-puzzle-area', 'finale-done-overlay', data.gameType, {...data.puzzleData, timeLimit: data.timeLimit});
       } else {
         $('finale-watch-status').innerHTML = `<div>${escHtml(data.p1Name)} vs ${escHtml(data.p2Name)}</div><div style="margin-top:.5rem;font-size:.85rem;color:var(--muted)">The final two are fighting for glory…</div>`;
       }
