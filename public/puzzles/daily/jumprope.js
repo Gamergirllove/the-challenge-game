@@ -28,7 +28,7 @@ window.Puzzles.jumprope = function(container, data, onComplete, onProgress) {
             <div class="jr-rating" id="jr-rating"> </div>
             <div class="jr-dots" id="jr-dots"></div>
             <button id="jr-btn" class="btn btn-primary jr-jump-btn">⬆ JUMP</button>
-            <div class="jr-hint" id="jr-hint">Watch the rope swing — click JUMP when it hits the ground!</div>
+            <div class="jr-hint" id="jr-hint">Watch the rope swing — tap JUMP when it hits the ground!</div>
         </div>`;
 
     const canvas = container.querySelector('#jr-canvas');
@@ -103,7 +103,7 @@ window.Puzzles.jumprope = function(container, data, onComplete, onProgress) {
         if (newRev > prevRev) {
             if (phase === 'intro') {
                 phase = 'playing';
-                setHint('Click JUMP when the rope hits the ground! (or press Space)');
+                setHint('Tap JUMP when the rope hits the ground!');
                 setBeat(`BEAT 1 / ${BEATS}`);
             } else if (phase === 'playing') {
                 onGroundHit();

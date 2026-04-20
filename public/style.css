@@ -1,7 +1,8 @@
 /* ============================================================
    BASE
    ============================================================ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+canvas { max-width: 100%; }
 
 :root {
   --red:    #e8192c;
@@ -240,6 +241,7 @@ html, body {
   font-family: var(--font-title); font-size: 1.4rem; letter-spacing: .15em;
   padding: .7rem 1.5rem; border: none; border-radius: 8px;
   cursor: pointer; transition: transform .1s, filter .15s; white-space: nowrap;
+  touch-action: manipulation;
 }
 .btn:hover { filter: brightness(1.15); }
 .btn:active { transform: scale(.97); }
@@ -358,7 +360,7 @@ html, body {
 .qa-progress { font-size: .85rem; color: var(--muted); letter-spacing: .2em; text-align: right; }
 .qa-question { font-family: var(--font-title); font-size: clamp(2rem, 5vw, 3.5rem); text-align: center; line-height: 1.1; padding: .5rem; }
 .qa-choices { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
-.qa-choice {
+.qa-choice { touch-action: manipulation;
   background: var(--dark3); border: 2px solid rgba(255,255,255,.1); border-radius: 10px;
   padding: .9rem 1rem; font-family: var(--font-title); font-size: 1.5rem; letter-spacing: .05em;
   color: var(--text); cursor: pointer; transition: background .15s, border-color .15s; text-align: center;
@@ -473,7 +475,7 @@ html, body {
 .csq-back {
   grid-column: span 5; height: 48px; border-radius: 10px; border: 2px solid rgba(255,255,255,.2);
   background: rgba(255,255,255,.08); color: var(--text); font-size: 1.3rem;
-  cursor: pointer; transition: background .15s;
+  cursor: pointer; transition: background .15s; touch-action: manipulation;
 }
 .csq-back:hover { background: rgba(255,255,255,.15); }
 .csq-back[disabled] { pointer-events: none; opacity: .35; }
@@ -627,6 +629,7 @@ html, body {
   background: var(--dark3); border: 2px solid rgba(255,255,255,.1); border-radius: 10px;
   padding: .7rem 1rem; color: var(--text); font-family: var(--font-title); font-size: 1.3rem;
   letter-spacing: .05em; cursor: pointer; text-align: left; transition: background .15s, border-color .15s;
+  touch-action: manipulation;
 }
 .vote-btn:hover { background: var(--dark4); border-color: var(--red); }
 .vote-btn.voted { background: rgba(232,25,44,.2); border-color: var(--red); pointer-events: none; }
@@ -649,7 +652,7 @@ html, body {
 .chat-msg-bubble.system-msg { background: transparent; color: var(--muted); font-style: italic; font-size: .85rem; }
 .chat-msg-bubble.spec-msg { background: rgba(155,89,182,.15); border: 1px solid rgba(155,89,182,.3); }
 .chat-input-row { display: flex; gap: .5rem; padding: .75rem; background: var(--dark2); border-top: 1px solid rgba(255,255,255,.06); flex-shrink: 0; }
-.chat-input { flex: 1; background: var(--dark3); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: .6rem .9rem; color: var(--text); font-family: var(--font-chat); font-size: .95rem; outline: none; }
+.chat-input { flex: 1; background: var(--dark3); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: .6rem .9rem; color: var(--text); font-family: var(--font-chat); font-size: 16px; outline: none; }
 .chat-input:focus { border-color: var(--blue); }
 .chat-send-btn { background: var(--blue); border: none; border-radius: 8px; padding: .6rem 1rem; color: #fff; font-family: var(--font-title); font-size: 1rem; letter-spacing: .1em; cursor: pointer; transition: filter .15s; }
 .chat-send-btn:hover { filter: brightness(1.2); }
@@ -1082,6 +1085,8 @@ html, body {
 
   /* Puzzle area */
   .puzzle-area { padding: .5rem; }
+  /* Minesweeper — larger tap targets on mobile */
+  .ms-cell { width: 36px !important; height: 36px !important; }
 
   /* Voting — stack vertically on mobile */
   .voting-screen { flex-direction: column !important; }
