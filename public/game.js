@@ -22,7 +22,6 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
-  if (id === 'screen-landing')    loadSidebarLeaderboard();
   if (id === 'screen-sp-players') renderSPChips();
 }
 
@@ -913,6 +912,9 @@ function applyUser(user) {
     const nameInput = $('landing-name');
     if (nameInput) nameInput.value = user.name;
   }
+  // Show/hide guest name input
+  const guestWrap = $('guest-name-wrap');
+  if (guestWrap) guestWrap.style.display = user ? 'none' : 'block';
   // Show identity bar
   const bar = $('player-identity');
   if (bar && user) {
@@ -997,6 +999,10 @@ $('btn-do-register').addEventListener('click', async () => {
 // Guest
 $('btn-guest').addEventListener('click', () => {
   currentUser = null;
+  const guestWrap = $('guest-name-wrap');
+  if (guestWrap) guestWrap.style.display = 'block';
+  const bar = $('player-identity');
+  if (bar) bar.style.display = 'none';
   showScreen('screen-landing');
 });
 

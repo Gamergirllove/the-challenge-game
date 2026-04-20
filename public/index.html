@@ -50,50 +50,51 @@
   </div>
 </div>
 
-<!-- =============== LANDING =============== -->
+<!-- =============== MODE SELECT =============== -->
 <div id="screen-landing" class="screen">
   <div class="landing-bg"></div>
-  <div class="landing-layout">
+  <div class="mode-wrap">
 
-    <!-- Sidebar: Hall of Champions -->
-    <aside class="landing-sidebar">
-      <div class="sidebar-header">🏆 HALL OF CHAMPIONS</div>
-      <div id="sidebar-lb" class="sidebar-lb-list">
-        <div class="sidebar-lb-loading">LOADING…</div>
+    <!-- Identity bar (visible when logged in, hidden for guests) -->
+    <div class="player-identity" id="player-identity" style="display:none">
+      <div id="identity-shirt"></div>
+      <div class="identity-info">
+        <div class="identity-name" id="identity-name"></div>
+        <div class="identity-stats" id="identity-stats"></div>
       </div>
-    </aside>
+      <button class="btn-icon" id="btn-leaderboard" title="Hall of Champions">🏆</button>
+      <button class="btn-icon" id="btn-logout" title="Logout">🚪</button>
+    </div>
 
-    <!-- Main content -->
-    <div class="landing-content">
-      <div class="logo">
-        <div class="logo-wordmark">CHALLENGE<span class="logo-dot">.IO</span></div>
-        <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
-      </div>
-      <!-- Player identity bar -->
-      <div class="player-identity" id="player-identity" style="display:none">
-        <div id="identity-shirt"></div>
-        <div class="identity-info">
-          <div class="identity-name" id="identity-name"></div>
-          <div class="identity-stats" id="identity-stats"></div>
-        </div>
-        <button class="btn-icon" id="btn-leaderboard" title="Hall of Champions">🏆</button>
-        <button class="btn-icon" id="btn-logout" title="Logout">🚪</button>
-      </div>
-      <div class="landing-card">
-        <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
-        <div class="landing-buttons">
-          <button class="btn btn-primary" id="btn-create">⚔ HOST MULTIPLAYER</button>
-          <button class="btn btn-solo" id="btn-solo">🎮 SINGLE PLAYER</button>
-          <div class="or-divider">— OR —</div>
-          <div class="join-row">
-            <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
-            <button class="btn btn-secondary" id="btn-join">JOIN</button>
-          </div>
-        </div>
-        <div id="landing-error" class="error-msg"></div>
+    <!-- Guest name (only shown for guests) -->
+    <div id="guest-name-wrap">
+      <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
+    </div>
+
+    <!-- Two big mode buttons -->
+    <div class="mode-cards">
+      <button class="mode-card mode-card-solo" id="btn-solo">
+        <div class="mode-card-icon">🎮</div>
+        <div class="mode-card-title">SINGLE PLAYER</div>
+        <div class="mode-card-desc">You vs. CPU opponents</div>
+      </button>
+      <button class="mode-card mode-card-multi" id="btn-create">
+        <div class="mode-card-icon">⚔</div>
+        <div class="mode-card-title">MULTIPLAYER</div>
+        <div class="mode-card-desc">Host a game, share the code</div>
+      </button>
+    </div>
+
+    <!-- Join row -->
+    <div class="join-section">
+      <div class="join-label">— HAVE A CODE? —</div>
+      <div class="join-row">
+        <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
+        <button class="btn btn-secondary" id="btn-join">JOIN</button>
       </div>
     </div>
 
+    <div id="landing-error" class="error-msg"></div>
   </div>
 </div>
 
@@ -137,7 +138,7 @@
       <button class="sp-count-btn" id="sp-count-plus">+</button>
     </div>
     <div class="sp-contestants-grid" id="sp-contestants-grid"></div>
-    <button class="btn btn-primary sp-start-btn" id="sp-start-solo">START GAME</button>
+    <button class="btn btn-primary sp-start-btn" id="sp-start-solo">LET'S ROLL</button>
     <button class="btn-ghost sp-back" id="sp-players-back">← BACK</button>
   </div>
 </div>
