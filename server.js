@@ -3,8 +3,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs   = require('fs');
-const crypto = require('crypto');
 const { calcScore } = require('./scoring');
+const User = require('./user');
+const { cpuPlay, pickCPUs, formatQuote, pickQuote } = require('./cpu-data');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,11 +40,6 @@ function saveDB(db) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
   } catch (e) { console.error('DB save error:', e); }
 }
-function hashPw(pw) {
-  return crypto.createHash('sha256').update(pw + 'cio_s4lt_2024').digest('hex');
-}
-function genId() { return crypto.randomBytes(10).toString('hex'); }
-
 // ── REST Auth ────────────────────────────────────────────────
 app.post('/auth/register', (req, res) => {
   const { name, email, password } = req.body || {};
@@ -52,49 +48,54 @@ app.post('/auth/register', (req, res) => {
   const db = loadDB();
   const existing = Object.values(db.users).find(u => u.email === email.toLowerCase().trim());
   if (existing) return res.status(409).json({ error: 'Email already registered' });
-  const userId = genId();
-  db.users[userId] = {
-    name: name.trim().slice(0, 20),
-    email: email.toLowerCase().trim(),
-    passwordHash: hashPw(password),
-    wins: 0, totalGames: 0,
-    createdAt: new Date().toISOString(),
-  };
+  const user = User.create(name, email, password);
+  db.users[user.userId] = user.toDB();
   saveDB(db);
-  const u = db.users[userId];
-  res.json({ userId, name: u.name, wins: u.wins, totalGames: u.totalGames });
+  res.json(user.toPublic());
 });
 
 app.post('/auth/login', (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   const db = loadDB();
-  const entry = Object.entries(db.users).find(([,u]) => u.email === email.toLowerCase().trim());
-  if (!entry || entry[1].passwordHash !== hashPw(password))
-    return res.status(401).json({ error: 'Invalid email or password' });
-  const [userId, u] = entry;
-  res.json({ userId, name: u.name, wins: u.wins, totalGames: u.totalGames });
+  const entry = Object.entries(db.users).find(([, u]) => u.email === email.toLowerCase().trim());
+  if (!entry) return res.status(401).json({ error: 'Invalid email or password' });
+  const [userId, data] = entry;
+  const user = User.fromDB(userId, data);
+  if (!user.checkPassword(password)) return res.status(401).json({ error: 'Invalid email or password' });
+  res.json(user.toPublic());
+});
+
+app.get('/api/profile/:userId', (req, res) => {
+  const db = loadDB();
+  const data = db.users[req.params.userId];
+  if (!data) return res.status(404).json({ error: 'User not found' });
+  res.json(User.fromDB(req.params.userId, data).toPublic());
 });
 
 app.get('/api/leaderboard', (_req, res) => {
   const db = loadDB();
   const board = Object.entries(db.users)
-    .map(([, u]) => ({ name: u.name, wins: u.wins, totalGames: u.totalGames }))
-    .sort((a, b) => b.wins - a.wins || b.totalGames - a.totalGames)
+    .map(([, u]) => ({ name: u.name, wins: u.wins, totalGames: u.totalGames, totalPoints: u.totalPoints || 0 }))
+    .sort((a, b) => b.wins - a.wins || b.totalPoints - a.totalPoints || b.totalGames - a.totalGames)
     .slice(0, 100);
   res.json(board);
 });
 
-function recordWin(userId) {
+function withUser(userId, fn) {
   if (!userId) return;
   const db = loadDB();
-  if (db.users[userId]) { db.users[userId].wins++; saveDB(db); }
+  if (!db.users[userId]) return;
+  const user = User.fromDB(userId, db.users[userId]);
+  fn(user);
+  db.users[userId] = user.toDB();
+  saveDB(db);
 }
-function recordGame(userId) {
-  if (!userId) return;
-  const db = loadDB();
-  if (db.users[userId]) { db.users[userId].totalGames++; saveDB(db); }
-}
+
+function recordWin(userId)                    { withUser(userId, u => u.recordWin()); }
+function recordGame(userId)                   { withUser(userId, u => u.recordGame()); }
+function recordPoints(userId, pts)            { withUser(userId, u => u.recordPoints(pts)); }
+function recordHighScore(userId, type, score) { withUser(userId, u => u.recordHighScore(type, score)); }
 
 // ============================================================
 // CONSTANTS
@@ -156,7 +157,7 @@ const ARENA_POOL = [
   'gridlock',     // Grid Lock
   'speedsort',    // Speed Sort
   'findbomb',     // Find the Bomb
-  'mathrace',     // Math Race
+  'quickmath',    // Quick Math (also in daily)
   'simonextreme', // Simon Extreme (faster color seq)
   'tunneldodge',  // Tunnel Dodge
 ];
@@ -264,7 +265,6 @@ const PUZZLE_NAMES = {
   gridlock:      '🚗 Rush Hour',
   speedsort:     '⬆ Speed Sort',
   findbomb:      '💣 Find the Bomb',
-  mathrace:      '🏎 Math Race',
   simonextreme:  '🔴 Simon Extreme',
   tunneldodge:   '🚀 Tunnel Dodge',
 };
@@ -293,7 +293,7 @@ function makePuzzle(type) {
       return { type, words };
     }
     case 'colorseq': {
-      const seq = Array.from({length:15}, () => COLORS[Math.floor(Math.random()*COLORS.length)]);
+      const seq = Array.from({length:10}, () => COLORS[Math.floor(Math.random()*COLORS.length)]);
       return { type, sequence: seq, colors: COLORS, colorHex: COLOR_HEX };
     }
     case 'trivia': {
@@ -365,13 +365,7 @@ function makePuzzle(type) {
     }
     // ── DAILY: JUMP ROPE ──────────────────────────────────
     case 'jumprope': {
-      // Beat intervals in ms (randomized slightly per round, speeds up)
-      const baseInterval = 1100;
-      const beats = Array.from({length:20}, (_, i) => {
-        const speedup = 1 - (i * 0.015); // gets faster
-        return Math.max(600, Math.round(baseInterval * speedup));
-      });
-      return { type, beats, totalJumps: 20 };
+      return { type, period: 950, beats: 10 };
     }
     // ── DAILY: MINESWEEPER LIGHT ──────────────────────────
     case 'minesweeper': {
@@ -460,14 +454,9 @@ function makePuzzle(type) {
         const bombPos = Math.floor(Math.random()*size*size);
         const grid = Array.from({length:size*size},(_,i)=> i===bombPos?'💣': ['😊','🌟','🎈','🎭','🦊','🌺','⚡','🎯'][Math.floor(Math.random()*8)]);
         const hint = `Row ${Math.floor(bombPos/size)+1}`;
-        return { grid: shuffle(grid.map((e,i)=>({emoji:e,isBomb:e==='💣'}))), size, hint: `The bomb is in ${hint}` };
+        return { grid: shuffle(grid.map(e=>({emoji:e,isBomb:e==='💣'}))), size, hint: `The bomb is in ${hint}` };
       });
       return { type, rounds_data };
-    }
-    // ── ARENA: MATH RACE ──────────────────────────────────
-    case 'mathrace': {
-      const qs = shuffle(MATH_BANK).slice(0,10).map(q=>({ q:q.q, a:q.a, choices:shuffle([q.a,...q.w]) }));
-      return { type, questions: qs };
     }
     // ── ARENA: SIMON EXTREME (faster color seq) ───────────
     case 'simonextreme': {
@@ -618,6 +607,7 @@ function startDaily(code) {
   const r = rooms[code]; if (!r) return;
   setPhase(code, PHASE.DAILY, { puzzleType: r.puzzleType, puzzleData: r.puzzleData, timeLimit: DAILY_SEC });
   startTimer(code, DAILY_SEC, () => endDaily(code));
+  scheduleCPUPuzzles(code, PHASE.DAILY);
 }
 
 function endDaily(code) {
@@ -646,6 +636,7 @@ function startDiscussion(code) {
   });
   broadcastSpectatorUpdate(code);
   startTimer(code, DISCUSSION_SEC, () => startVoting(code));
+  scheduleCPUDiscussion(code);
 }
 
 function startVoting(code) {
@@ -659,6 +650,7 @@ function startVoting(code) {
   });
   broadcastSpectatorUpdate(code);
   startTimer(code, VOTING_SEC, () => endVoting(code));
+  scheduleCPUVotes(code);
 }
 
 function endVoting(code) {
@@ -709,12 +701,13 @@ function startArena(code) {
   if (p1) p1.finished = false;
   if (p2) p2.finished = false;
   setPhase(code, PHASE.ARENA, {
-    p1Id:p1.id, p1Name:p1.name,
-    p2Id:p2.id, p2Name:p2.name,
+    p1Id:p1.id, p1Name:p1.name, p1Wins:p1.wins||0,
+    p2Id:p2.id, p2Name:p2.name, p2Wins:p2.wins||0,
     duelType: r.duelType, puzzleData: r.duelData, timeLimit: DUEL_SEC,
   });
   startTimer(code, DUEL_SEC, () => endArena(code));
   broadcastSpectatorUpdate(code);
+  scheduleCPUPuzzles(code, PHASE.ARENA);
 }
 
 function endArena(code) {
@@ -846,6 +839,7 @@ function startFinaleGame(code) {
   });
   broadcastSpectatorUpdate(code);
   startTimer(code, timeLimit, () => endFinaleGame(code));
+  scheduleCPUPuzzles(code, PHASE.FINALE);
 }
 
 function endFinaleGame(code) {
@@ -902,6 +896,138 @@ function endFinale(code) {
     finaleMode: true,
   });
   broadcastSpectatorUpdate(code);
+}
+
+// ============================================================
+// CPU SIMULATION (solo mode)
+// ============================================================
+
+function scheduleCPUPuzzles(code, phase) {
+  const r = rooms[code]; if (!r || !r.isSolo) return;
+  const gameType = (phase === PHASE.ARENA || phase === PHASE.FINALE) ? r.duelType : r.puzzleType;
+
+  // Which CPU ids are active in this phase
+  let cpuIds;
+  if (phase === PHASE.ARENA) {
+    cpuIds = [r.lastPlaceId, r.duelOpponentId].filter(id => r.cpuPlayers[id]);
+  } else if (phase === PHASE.FINALE) {
+    cpuIds = r.finalePlayers.filter(id => r.cpuPlayers[id]);
+  } else {
+    cpuIds = Object.keys(r.cpuPlayers).filter(id => r.players[id]?.alive);
+  }
+
+  cpuIds.forEach(cpuId => {
+    const cpu = r.cpuPlayers[cpuId];
+    const { score, timeMs } = cpuPlay(cpu, gameType, r.difficulty);
+    // Cap to the actual phase time so CPU can't finish "after" the round ends
+    const maxMs = (phase === PHASE.DAILY ? 89000 : phase === PHASE.FINALE ? (FINALE_TIMES[gameType] * 1000 - 500) : 119000);
+    const delay = Math.min(timeMs, maxMs);
+
+    setTimeout(() => {
+      if (!rooms[code] || r.phase !== phase) return;
+      const p = r.players[cpuId]; if (!p || p.finished) return;
+      p.finished  = true;
+      p.roundScore = score;
+
+      if (phase === PHASE.DAILY) {
+        const al = alive(code);
+        const done = al.filter(q => q.finished).length;
+        io.to(code).emit('daily:progress', { done, total: al.length });
+        if (done === al.length) { clearTimer(code); endDaily(code); }
+
+      } else if (phase === PHASE.ARENA) {
+        r.duelResults[cpuId] = { score };
+        r.liveScores[cpuId]  = score;
+        io.to(code).emit('arena:live', {
+          p1Id: r.lastPlaceId,    p1Score: r.liveScores[r.lastPlaceId]    || 0,
+          p2Id: r.duelOpponentId, p2Score: r.liveScores[r.duelOpponentId] || 0,
+        });
+        if (r.duelResults[r.lastPlaceId] && r.duelResults[r.duelOpponentId]) endArena(code);
+
+      } else if (phase === PHASE.FINALE) {
+        r.duelResults[cpuId] = { score };
+        r.liveScores[cpuId]  = score;
+        const [p1Id, p2Id] = r.finalePlayers;
+        io.to(code).emit('finale:live', {
+          p1Id, p1Score: r.liveScores[p1Id] || 0,
+          p2Id, p2Score: r.liveScores[p2Id] || 0,
+        });
+        if (r.duelResults[p1Id] && r.duelResults[p2Id]) { clearTimer(code); endFinaleGame(code); }
+      }
+    }, delay);
+  });
+}
+
+function scheduleCPUDiscussion(code) {
+  const r = rooms[code]; if (!r || !r.isSolo) return;
+  const al = alive(code);
+  const others = al.filter(p => p.id !== r.lastPlaceId).sort((a,b) => b.roundScore - a.roundScore);
+  const strongPlayer = others[0];
+  const secondPlayer = others[others.length - 1];
+  const params = {
+    strong: strongPlayer?.name?.replace(/^.\s/, '') || 'the leader',
+    second: secondPlayer?.name?.replace(/^.\s/, '') || 'second place',
+  };
+
+  Object.keys(r.cpuPlayers).filter(id => r.players[id]?.alive).forEach(cpuId => {
+    const cpu  = r.cpuPlayers[cpuId];
+    const p    = r.players[cpuId];
+    const msgs = [];
+
+    // Opening line (3–12s)
+    msgs.push({ text: pickQuote(cpu.quotes.open), delay: 3000 + Math.random() * 9000 });
+
+    // Vote suggestion (15–40s) — honest vs scheming
+    const isHonest   = Math.random() < cpu.honesty;
+    const suggestKey = isHonest ? 'suggest_honest' : 'suggest_scheming';
+    const pool       = cpu.quotes[suggestKey];
+    if (pool?.length) {
+      msgs.push({ text: formatQuote(pickQuote(pool), params), delay: 15000 + Math.random() * 25000 });
+    }
+
+    // Pressure line (40–55s, 55% chance)
+    if (Math.random() < 0.55 && cpu.quotes.pressure?.length) {
+      msgs.push({ text: formatQuote(pickQuote(cpu.quotes.pressure), params), delay: 40000 + Math.random() * 14000 });
+    }
+
+    msgs.forEach(({ text, delay }) => {
+      setTimeout(() => {
+        if (!rooms[code] || r.phase !== PHASE.DISCUSSION) return;
+        const msg = { id: Date.now() + Math.random(), playerId: cpuId, playerName: p.name, text, ts: Date.now() };
+        r.chatHistory.push(msg);
+        io.to(code).emit('chat:message', msg);
+      }, delay);
+    });
+  });
+}
+
+function scheduleCPUVotes(code) {
+  const r = rooms[code]; if (!r || !r.isSolo) return;
+  const al = alive(code);
+  const others = al.filter(p => p.id !== r.lastPlaceId).sort((a,b) => b.roundScore - a.roundScore);
+  const strongPlayer = others[0];
+  const secondPlayer = others[others.length - 1];
+
+  Object.keys(r.cpuPlayers)
+    .filter(id => r.players[id]?.alive && id !== r.lastPlaceId)
+    .forEach(cpuId => {
+      const cpu   = r.cpuPlayers[cpuId];
+      const delay = 1500 + Math.random() * 11000;
+      setTimeout(() => {
+        if (!rooms[code] || r.phase !== PHASE.VOTING) return;
+        const isHonest = Math.random() < cpu.honesty;
+        let target = isHonest ? secondPlayer : strongPlayer;
+        // Fallback: don't vote self or lastPlace
+        if (!target || target.id === cpuId || target.id === r.lastPlaceId) {
+          target = others.find(p => p.id !== cpuId && p.id !== r.lastPlaceId);
+        }
+        if (!target) return;
+        r.votes[cpuId] = target.id;
+        const votableCount = alive(code).filter(p => p.id !== r.lastPlaceId).length;
+        io.to(code).emit('vote:update', { count: Object.keys(r.votes).length, total: votableCount });
+        if (Object.keys(r.votes).length >= votableCount) { clearTimer(code); endVoting(code); }
+      }, delay);
+    });
 }
 
 // ============================================================
@@ -967,6 +1093,10 @@ io.on('connection', socket => {
     const type = r.puzzleType; // works for all phases now
     const score = calcScore(type, result || {}, timeMs || 99999);
     p.roundScore = score;
+
+    socket.emit('puzzle:scored', { score, type });
+    recordPoints(socket.data.userId, score);
+    recordHighScore(socket.data.userId, type, score);
 
     if (r.phase === PHASE.ARENA) {
       r.duelResults[socket.id] = { score };
@@ -1076,6 +1206,37 @@ io.on('connection', socket => {
     const s = r.spectators[socket.id]; if (!s) return;
     s.watchingId = targetId;
     socket.emit('spectator:watching', { targetId, targetName: r.players[targetId]?.name });
+  });
+
+  // ── Single player: create room + CPUs, start immediately ──
+  socket.on('solo:start', ({ name, difficulty, cpuCount }) => {
+    if (!name?.trim()) return socket.emit('error', { msg: 'Enter your name' });
+    const n = name.trim().slice(0, 20);
+    const diff = ['easy','medium','hard'].includes(difficulty) ? difficulty : 'medium';
+    const count = Math.min(9, Math.max(2, parseInt(cpuCount) || 4));
+    const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
+    const code = createRoom(socket.id, n, wins);
+    socket.join(code);
+    socket.data.code = code;
+    socket.data.name = n;
+    socket.data.isSpectator = false;
+
+    const r = rooms[code];
+    r.isSolo = true;
+    r.difficulty = diff;
+    r.cpuPlayers = {};
+
+    // Add CPU players
+    const cpus = pickCPUs(count);
+    cpus.forEach(cpu => {
+      const cpuId = 'cpu-' + cpu.id + '-' + Math.random().toString(36).substr(2,5);
+      r.players[cpuId] = { id: cpuId, name: `${cpu.emoji} ${cpu.name}`, isHost: false, alive: true, totalScore: 0, roundScore: 0, finished: false, wins: 0, isCPU: true };
+      r.cpuPlayers[cpuId] = { ...cpu };
+    });
+
+    socket.emit('room:created', { code, state: roomState(code), solo: true, difficulty: diff });
+    // Brief delay so client can set up state before phases start
+    setTimeout(() => { if (rooms[code]) startRound(code); }, 1200);
   });
 
   socket.on('game:leave', () => {

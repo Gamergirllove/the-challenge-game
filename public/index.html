@@ -40,7 +40,12 @@
       </div>
 
       <div id="auth-error" class="error-msg"></div>
-      <button class="btn-ghost" id="btn-guest">▷ Continue as Guest</button>
+
+      <div class="guest-divider"><span>OR</span></div>
+      <button class="btn-ghost" id="btn-guest">▷ Play as Guest</button>
+      <div class="guest-notice">
+        ⚠ Guests do not save scores, cannot appear on the high score list, and will not receive a special shirt.
+      </div>
     </div>
   </div>
 </div>
@@ -77,7 +82,8 @@
       <div class="landing-card">
         <input id="landing-name" class="input-field" type="text" placeholder="YOUR NAME" maxlength="20" autocomplete="off"/>
         <div class="landing-buttons">
-          <button class="btn btn-primary" id="btn-create">CREATE GAME</button>
+          <button class="btn btn-primary" id="btn-create">⚔ HOST MULTIPLAYER</button>
+          <button class="btn btn-solo" id="btn-solo">🎮 SINGLE PLAYER</button>
           <div class="or-divider">— OR —</div>
           <div class="join-row">
             <input id="landing-code" class="input-field code-input" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off"/>
@@ -88,6 +94,51 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- =============== SP: DIFFICULTY =============== -->
+<div id="screen-sp-difficulty" class="screen sp-screen">
+  <div class="sp-wrap">
+    <div class="sp-logo">🎮 SINGLE PLAYER</div>
+    <div class="sp-heading">Choose Your Difficulty</div>
+    <div class="sp-diff-grid">
+      <button class="sp-diff-card" data-diff="easy">
+        <div class="sp-diff-emoji">😎</div>
+        <div class="sp-diff-name">EASY</div>
+        <div class="sp-diff-desc">Chill competition. Great for learning the games.</div>
+      </button>
+      <button class="sp-diff-card" data-diff="medium">
+        <div class="sp-diff-emoji">💪</div>
+        <div class="sp-diff-name">MEDIUM</div>
+        <div class="sp-diff-desc">Balanced. You'll need to bring your A-game.</div>
+      </button>
+      <button class="sp-diff-card" data-diff="hard">
+        <div class="sp-diff-emoji">🔥</div>
+        <div class="sp-diff-name">HARD</div>
+        <div class="sp-diff-desc">They're gunning for you. No mercy.</div>
+      </button>
+    </div>
+    <button class="btn-ghost sp-back" id="sp-diff-back">← BACK</button>
+  </div>
+</div>
+
+<!-- =============== SP: PLAYER COUNT =============== -->
+<div id="screen-sp-players" class="screen sp-screen">
+  <div class="sp-wrap">
+    <div class="sp-logo">🎮 SINGLE PLAYER</div>
+    <div class="sp-heading">How Many Opponents?</div>
+    <div class="sp-count-row">
+      <button class="sp-count-btn" id="sp-count-minus">−</button>
+      <div class="sp-count-display">
+        <div class="sp-count-num" id="sp-count-val">4</div>
+        <div class="sp-count-label">CPU OPPONENTS</div>
+      </div>
+      <button class="sp-count-btn" id="sp-count-plus">+</button>
+    </div>
+    <div class="sp-contestants-grid" id="sp-contestants-grid"></div>
+    <button class="btn btn-primary sp-start-btn" id="sp-start-solo">START GAME</button>
+    <button class="btn-ghost sp-back" id="sp-players-back">← BACK</button>
   </div>
 </div>
 
@@ -148,6 +199,7 @@
   <div id="puzzle-done-overlay" class="puzzle-done-overlay" style="display:none">
     <div class="done-icon">✅</div>
     <div class="done-text">FINISHED!</div>
+    <div id="puzzle-done-score" class="done-score"></div>
     <div class="done-sub">Waiting for others…</div>
     <div class="waiting-dots"><span>.</span><span>.</span><span>.</span></div>
   </div>
@@ -279,6 +331,7 @@
   <div id="arena-done-overlay" class="puzzle-done-overlay" style="display:none">
     <div class="done-icon">🔥</div>
     <div class="done-text">YOU FINISHED!</div>
+    <div id="arena-done-score" class="done-score"></div>
     <div class="done-sub">Waiting for your opponent…</div>
   </div>
 </div>
@@ -354,6 +407,7 @@
   <div id="finale-done-overlay" class="puzzle-done-overlay" style="display:none">
     <div class="done-icon">⚡</div>
     <div class="done-text">DONE!</div>
+    <div id="finale-done-score" class="done-score"></div>
     <div class="done-sub">Waiting for opponent…</div>
   </div>
 </div>
@@ -450,7 +504,43 @@
 <div id="toast" class="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="puzzles.js"></script>
+<script>window.Puzzles = {};</script>
+<!-- Daily challenge puzzles -->
+<script src="puzzles/daily/memory.js"></script>
+<script src="puzzles/daily/quickmath.js"></script>
+<script src="puzzles/daily/colorseq.js"></script>
+<script src="puzzles/daily/wordscramble.js"></script>
+<script src="puzzles/daily/tessellations.js"></script>
+<script src="puzzles/daily/patternmatch.js"></script>
+<script src="puzzles/daily/emojisort.js"></script>
+<script src="puzzles/daily/curling.js"></script>
+<script src="puzzles/daily/jumprope.js"></script>
+<script src="puzzles/daily/minesweeper.js"></script>
+<script src="puzzles/daily/tangram.js"></script>
+<script src="puzzles/daily/colormatch.js"></script>
+<!-- Arena puzzles -->
+<script src="puzzles/arena/trivia.js"></script>
+<script src="puzzles/arena/reaction.js"></script>
+<script src="puzzles/arena/numberhunt.js"></script>
+<script src="puzzles/arena/tapfrenzy.js"></script>
+<script src="puzzles/arena/fastfingers.js"></script>
+<script src="puzzles/arena/gridlock.js"></script>
+<script src="puzzles/arena/speedsort.js"></script>
+<script src="puzzles/arena/findbomb.js"></script>
+<script src="puzzles/arena/simonextreme.js"></script>
+<script src="puzzles/arena/tunneldodge.js"></script>
+<script src="cpu/cpu.js"></script>
+<script src="cpu/jimmy-pineapples.js"></script>
+<script src="cpu/cte.js"></script>
+<script src="cpu/karma-mary.js"></script>
+<script src="cpu/cori.js"></script>
+<script src="cpu/corale.js"></script>
+<script src="cpu/eve.js"></script>
+<script src="cpu/honest-abe.js"></script>
+<script src="cpu/brookie-the-rookie.js"></script>
+<script src="cpu/tony-time.js"></script>
+<script src="cpu/derek-the-bulldog.js"></script>
+<script src="cpu/scuba-nells.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

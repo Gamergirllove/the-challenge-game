@@ -22,7 +22,8 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
-  if (id === 'screen-landing') loadSidebarLeaderboard();
+  if (id === 'screen-landing')    loadSidebarLeaderboard();
+  if (id === 'screen-sp-players') renderSPChips();
 }
 
 // ── Toast ──────────────────────────────────────────────────
@@ -76,6 +77,70 @@ function showError(msg) {
   $('landing-error').textContent = msg;
   setTimeout(() => { $('landing-error').textContent = ''; }, 3000);
 }
+
+// ── Single Player flow ─────────────────────────────────────
+let spDifficulty = 'medium';
+let spCpuCount   = 4;
+
+const SP_ALL = [
+  { id:'jimmy-pineapples',    emoji:'🍍', name:'Jimmy Pineapples'    },
+  { id:'cte',                 emoji:'🧠', name:'CTE'                 },
+  { id:'karma-mary',          emoji:'✨', name:'Karma Mary'           },
+  { id:'cori',                emoji:'♟️', name:'Cori'                 },
+  { id:'corale',              emoji:'🎨', name:'Corale'              },
+  { id:'eve',                 emoji:'📐', name:'Eve'                  },
+  { id:'honest-abe',          emoji:'🎩', name:'Honest Abe'          },
+  { id:'brookie-the-rookie',  emoji:'🌱', name:'Brookie the Rookie'  },
+  { id:'tony-time',           emoji:'⚡', name:'Tony Time'            },
+  { id:'derek-the-bulldog',   emoji:'🐕', name:'Derek the Bulldog'   },
+  { id:'scuba-nells',         emoji:'🤿', name:'Scuba Nells'         },
+];
+
+$('btn-solo').addEventListener('click', () => {
+  const name = $('landing-name').value.trim();
+  if (!name) return showError('Enter your name first!');
+  showScreen('screen-sp-difficulty');
+});
+
+// Difficulty cards
+document.querySelectorAll('.sp-diff-card').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sp-diff-card').forEach(b => b.classList.remove('sp-selected'));
+    btn.classList.add('sp-selected');
+    spDifficulty = btn.dataset.diff;
+    setTimeout(() => showScreen('screen-sp-players'), 180);
+  });
+});
+$('sp-diff-back').addEventListener('click', () => showScreen('screen-landing'));
+
+// Count selector
+function renderSPChips() {
+  const grid = $('sp-contestants-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  SP_ALL.forEach((c, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'sp-contestant-chip' + (i < spCpuCount ? ' active' : '');
+    chip.innerHTML = `<span class="chip-emoji">${c.emoji}</span>${c.name}`;
+    grid.appendChild(chip);
+  });
+  $('sp-count-val').textContent = spCpuCount;
+}
+
+$('sp-count-minus').addEventListener('click', () => {
+  if (spCpuCount > 2) { spCpuCount--; renderSPChips(); }
+});
+$('sp-count-plus').addEventListener('click', () => {
+  if (spCpuCount < 9) { spCpuCount++; renderSPChips(); }
+});
+$('sp-players-back').addEventListener('click', () => showScreen('screen-sp-difficulty'));
+
+$('sp-start-solo').addEventListener('click', () => {
+  const name = $('landing-name').value.trim();
+  if (!name) { showScreen('screen-landing'); return; }
+  socket.emit('solo:start', { name, difficulty: spDifficulty, cpuCount: spCpuCount });
+});
+
 
 // ── Copy code ──────────────────────────────────────────────
 $('btn-copy-code').addEventListener('click', () => {
@@ -445,12 +510,17 @@ function renderFinaleResults(data) {
 // ── Socket events ──────────────────────────────────────────
 socket.on('connect', () => { myId = socket.id; });
 
-socket.on('room:created', ({ code, state }) => {
+socket.on('room:created', ({ code, state, solo }) => {
   roomCode = code; isHost = true;
   myName = state.players.find(p=>p.id===myId)?.name || '';
   gameState = state;
-  renderLobby(state);
-  showScreen('screen-lobby');
+  if (solo) {
+    // Solo mode — no lobby, game phases will arrive momentarily
+    showScreen('screen-daily-intro');
+  } else {
+    renderLobby(state);
+    showScreen('screen-lobby');
+  }
 });
 
 socket.on('room:joined', ({ code, state }) => {
@@ -593,7 +663,14 @@ socket.on('game:phase', (data) => {
       $('arena-done-overlay').style.display = 'none';
       $('arena-puzzle-area').innerHTML = '';
       if (amDueling) {
-        renderPuzzle('arena-puzzle-area', 'arena-done-overlay', data.duelType, {...data.puzzleData, timeLimit: data.timeLimit});
+        const isP1 = myId === data.p1Id;
+        const arenaCtx = {
+          myName:  isP1 ? data.p1Name : data.p2Name,
+          myWins:  isP1 ? data.p1Wins : data.p2Wins,
+          oppName: isP1 ? data.p2Name : data.p1Name,
+          oppWins: isP1 ? data.p2Wins : data.p1Wins,
+        };
+        renderPuzzle('arena-puzzle-area', 'arena-done-overlay', data.duelType, {...data.puzzleData, ...arenaCtx, timeLimit: data.timeLimit});
       } else {
         $('arena-watch-status').innerHTML = `<div>${escHtml(data.p1Name)} vs ${escHtml(data.p2Name)}</div><div style="margin-top:.5rem;font-size:.85rem;color:var(--muted)">Both players are fighting it out…</div>`;
       }
@@ -692,6 +769,14 @@ socket.on('vote:update', ({ count, total }) => {
   $('vote-progress').style.display = 'block';
   $('vote-count').textContent = count;
   $('vote-total').textContent = total;
+});
+
+// ── Puzzle scored ──────────────────────────────────────────
+socket.on('puzzle:scored', ({ score }) => {
+  const label = `${score} / 1000 PTS`;
+  ['puzzle-done-score', 'arena-done-score', 'finale-done-score'].forEach(id => {
+    const el = $(id); if (el) el.textContent = label;
+  });
 });
 
 // ── Daily progress ─────────────────────────────────────────
@@ -947,7 +1032,8 @@ async function showLeaderboard() {
         ${renderShirtSVG(p.wins, 40)}
         <div class="lb-name">${escHtml(p.name)}</div>
         <div class="lb-wins">🏆 ${p.wins}</div>
-        <div class="lb-games">${p.totalGames} games<br>${winRate}% win rate</div>
+        <div class="lb-games">${p.totalGames} games · ${winRate}% wins</div>
+        <div class="lb-points">⭐ ${(p.totalPoints || 0).toLocaleString()} pts</div>
       </div>`;
     }).join('');
   } catch { list.innerHTML = `<div class="lb-empty">Could not load leaderboard.</div>`; }
@@ -977,10 +1063,6 @@ async function loadSidebarLeaderboard() {
 
 // ── Boot sequence ────────────────────────────────────────────
 (function boot() {
-  const saved = loadSession();
-  if (saved?.userId) {
-    applyUser(saved);
-    showScreen('screen-landing');
-  }
-  // screen-auth is default active — stays if no session
+  // Always start on the login screen
+  showScreen('screen-auth');
 })();

@@ -45,7 +45,7 @@ function assertRange(description, actual, min, max) {
 console.log('\n=== Global invariants ===');
 
 const allTypes = Object.keys(SCORE_META);
-assertEq('SCORE_META has 23 game types', allTypes.length, 23);
+assertEq('SCORE_META has 22 game types', allTypes.length, 22);
 
 // Every type is covered by calcScore and returns a number
 for (const type of allTypes) {
@@ -132,11 +132,11 @@ assertEq('wordscramble: 0/6 at 0ms = 300 (timeBonus)', calcScore('wordscramble',
 // COLORSEQ
 // ============================================================
 console.log('\n=== colorseq ===');
-assertEq('colorseq: level 0 = 0', calcScore('colorseq', { level: 0 }, 0), 0);
-assertEq('colorseq: level 10 = 1000', calcScore('colorseq', { level: 10 }, 0), 1000);
-assertEq('colorseq: level 5 = 500', calcScore('colorseq', { level: 5 }, 0), 500);
-assertEq('colorseq: level 20 capped at 1000', calcScore('colorseq', { level: 20 }, 0), 1000);
-assertEq('colorseq: missing level = 0', calcScore('colorseq', {}, 0), 0);
+assertEq('colorseq: perfect fast = 1000', calcScore('colorseq', { correct: 10, total: 10 }, 0), 1000);
+assertEq('colorseq: half correct fast = 650', calcScore('colorseq', { correct: 5, total: 10 }, 0), 650);
+assertEq('colorseq: 0 correct = 300 (speed bonus only)', calcScore('colorseq', { correct: 0, total: 10 }, 0), 300);
+assertEq('colorseq: perfect slow (60s) = 800', calcScore('colorseq', { correct: 10, total: 10 }, 60000), 800);
+assertEq('colorseq: missing total = 0', calcScore('colorseq', {}, 0), 0);
 
 // ============================================================
 // TRIVIA
@@ -198,10 +198,11 @@ assertEq('curling: missing score = 0', calcScore('curling', {}, 0), 0);
 // JUMPROPE
 // ============================================================
 console.log('\n=== jumprope ===');
-assertEq('jumprope: 0 hits = 0', calcScore('jumprope', { hits: 0 }, 0), 0);
-assertEq('jumprope: 20 hits = 1000', calcScore('jumprope', { hits: 20 }, 0), 1000);
-assertEq('jumprope: 10 hits = 500', calcScore('jumprope', { hits: 10 }, 0), 500);
-assertEq('jumprope: missing hits = 0', calcScore('jumprope', {}, 0), 0);
+assertEq('jumprope: all PERFECT = 1000', calcScore('jumprope', { hits: 10, total: 10, score: 1000 }, 0), 1000);
+assertEq('jumprope: all GOOD = 700', calcScore('jumprope', { hits: 10, total: 10, score: 700 }, 0), 700);
+assertEq('jumprope: half hits = 500', calcScore('jumprope', { hits: 5, total: 10, score: 500 }, 0), 500);
+assertEq('jumprope: 0 hits = 0', calcScore('jumprope', { hits: 0, total: 10, score: 0 }, 0), 0);
+assertEq('jumprope: missing score = 0', calcScore('jumprope', {}, 0), 0);
 
 // ============================================================
 // MINESWEEPER — fixed: won/lost distinction
@@ -271,14 +272,6 @@ assertEq('findbomb: 8/8 at 0ms = 1000', calcScore('findbomb', { found: 8, total:
 assertEq('findbomb: 0/8 at 0ms = 300 (timeBonus)', calcScore('findbomb', { found: 0, total: 8 }, 0), 300);
 
 // ============================================================
-// MATHRACE
-// ============================================================
-console.log('\n=== mathrace ===');
-assertEq('mathrace: no total returns 0', calcScore('mathrace', {}, 0), 0);
-assertEq('mathrace: 10/10 at 0ms = 1000', calcScore('mathrace', { correct: 10, total: 10 }, 0), 1000);
-assertEq('mathrace: 0/10 at 0ms = 300 (timeBonus)', calcScore('mathrace', { correct: 0, total: 10 }, 0), 300);
-
-// ============================================================
 // SIMONEXTREME
 // ============================================================
 console.log('\n=== simonextreme ===');
@@ -313,10 +306,11 @@ assertEq('colormatch: missing pairs = 0', calcScore('colormatch', {}, 0), 0);
 // TUNNELDODGE
 // ============================================================
 console.log('\n=== tunneldodge ===');
-assertEq('tunneldodge: 0 distance = 0', calcScore('tunneldodge', { distance: 0 }, 0), 0);
-assertEq('tunneldodge: 250 distance = 1000', calcScore('tunneldodge', { distance: 250 }, 0), 1000);
-assertEq('tunneldodge: 125 distance = 500', calcScore('tunneldodge', { distance: 125 }, 0), 500);
-assertEq('tunneldodge: missing distance = 0', calcScore('tunneldodge', {}, 0), 0);
+assertEq('tunneldodge: 0 taps = 0', calcScore('tunneldodge', { taps: 0 }, 0), 0);
+assertEq('tunneldodge: 200 taps = 1000', calcScore('tunneldodge', { taps: 200 }, 0), 1000);
+assertEq('tunneldodge: 100 taps = 500', calcScore('tunneldodge', { taps: 100 }, 0), 500);
+assertEq('tunneldodge: 250 taps capped 1000', calcScore('tunneldodge', { taps: 250 }, 0), 1000);
+assertEq('tunneldodge: missing taps = 0', calcScore('tunneldodge', {}, 0), 0);
 
 // ============================================================
 // SUMMARY

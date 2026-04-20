@@ -1023,122 +1023,13 @@ window.Puzzles = {
   // DAILY: JUMP ROPE — press button in rhythm to jump
   // ──────────────────────────────────────────────────────────
   jumprope(container, data, onComplete, onProgress) {
-    const startTime = Date.now();
-    const duration = data.duration || 30000;
-    const bpm = data.bpm || 80;
-    const beatMs = (60000 / bpm);
-    const windowMs = beatMs * 0.45;
-    let jumps = 0, misses = 0, ropeAngle = 0, lastBeat = 0, animId;
-    let jumped = false, canJump = true;
-
-    container.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:.75rem;width:100%">
-        <div style="font-family:var(--font-title);font-size:1.8rem;color:var(--gold)">🪢 JUMP ROPE</div>
-        <div style="font-size:.85rem;color:var(--muted)">Press JUMP in rhythm — don't trip!</div>
-        <canvas id="jr-canvas" width="320" height="160" style="border-radius:8px;background:#1a1a2e"></canvas>
-        <div style="display:flex;gap:2rem;font-family:var(--font-title);font-size:1.1rem">
-          <span>✅ <span id="jr-jumps">0</span></span>
-          <span style="color:var(--red)">❌ <span id="jr-misses">0</span></span>
-        </div>
-        <button id="jr-btn" class="btn btn-primary" style="font-size:1.4rem;padding:.8rem 3rem;letter-spacing:.2em">⬆ JUMP</button>
-        <div style="font-size:.8rem;color:var(--muted)" id="jr-msg">Get ready…</div>
-      </div>`;
-
-    const canvas = container.querySelector('#jr-canvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    function drawStickman(x, y, jumping) {
-      ctx.save();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(x, y - (jumping?14:0), 8, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, y-(jumping?6:0)); ctx.lineTo(x, y+16-(jumping?6:0)); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-10, y+6-(jumping?6:0)); ctx.lineTo(x+10, y+6-(jumping?6:0)); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, y+16-(jumping?6:0)); ctx.lineTo(x-8, y+30-(jumping?6:0)); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, y+16-(jumping?6:0)); ctx.lineTo(x+8, y+30-(jumping?6:0)); ctx.stroke();
-      ctx.restore();
+    if (window.Puzzles && window.Puzzles.jumprope) {
+      window.Puzzles.jumprope(container, data, onComplete, onProgress);
+      return;
     }
-
-    let playerY = H - 45;
-    let isJumping = false;
-    let jumpVel = 0;
-
-    function animate(ts) {
-      ctx.clearRect(0,0,W,H);
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0,0,W,H);
-      // ground
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(20,H-20); ctx.lineTo(W-20,H-20); ctx.stroke();
-      // rope holders
-      drawStickman(40, H-45, false);
-      drawStickman(W-40, H-45, false);
-      // rope
-      ropeAngle += (Math.PI*2 / beatMs) * 16.67;
-      const cx = W/2, cy = H-35;
-      const rx = 110, ry = 30;
-      ctx.strokeStyle = '#f90';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for(let t=0;t<=1;t+=0.05) {
-        const angle = ropeAngle + t * Math.PI;
-        const px = cx - rx + rx*2*t;
-        const py = cy + Math.sin(angle) * ry;
-        t===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-      // rope bottom check
-      const ropeBottom = cy + Math.sin(ropeAngle + Math.PI/2) * ry;
-      // player jump physics
-      if(isJumping) {
-        playerY += jumpVel;
-        jumpVel += 1.2;
-        if(playerY >= H-45) { playerY = H-45; isJumping = false; jumpVel = 0; }
-      }
-      drawStickman(W/2, playerY, isJumping);
-      // collision: rope near ground and player not jumping
-      if(!isJumping && Math.sin(ropeAngle + Math.PI/2) > 0.7) {
-        // rope is at bottom — player should be up
-        // we just use beat timing for the game mechanic
-      }
-      animId = requestAnimationFrame(animate);
-    }
-    animId = requestAnimationFrame(animate);
-
-    let beatCount = 0;
-    const beatInterval = setInterval(() => {
-      beatCount++;
-      const msg = container.querySelector('#jr-msg');
-      if(msg) msg.textContent = beatCount % 2 === 0 ? '🎵 Jump!' : '⏸';
-      lastBeat = Date.now();
-      canJump = true;
-      jumped = false;
-    }, beatMs);
-
-    container.querySelector('#jr-btn').addEventListener('click', () => {
-      if(!canJump) return;
-      const timeSinceBeat = Date.now() - lastBeat;
-      const inWindow = timeSinceBeat < windowMs || timeSinceBeat > beatMs - windowMs;
-      isJumping = true; jumpVel = -12;
-      if(inWindow) {
-        jumps++;
-        container.querySelector('#jr-jumps').textContent = jumps;
-        const expectedJumps = data.totalJumps || Math.round(duration / beatMs); if(onProgress) onProgress(Math.min(900, Math.floor((jumps / expectedJumps) * 900)));
-      } else {
-        misses++;
-        container.querySelector('#jr-misses').textContent = misses;
-      }
-      canJump = false;
-    });
-
-    setTimeout(() => {
-      clearInterval(beatInterval);
-      cancelAnimationFrame(animId);
-      onComplete({ result: { hits: jumps, misses }, timeMs: Date.now() - startTime });
-    }, duration);
+    // minimal fallback — real game loaded from puzzles/jumprope.js
   },
+
 
   // ──────────────────────────────────────────────────────────
   // DAILY: MINESWEEPER — flag all mines without hitting one
@@ -1281,56 +1172,6 @@ window.Puzzles = {
       });
     }
     renderRound();
-  },
-
-  // ──────────────────────────────────────────────────────────
-  // ARENA: MATH RACE — solve math problems as fast as possible
-  // ──────────────────────────────────────────────────────────
-  mathrace(container, data, onComplete, onProgress) {
-    const startTime = Date.now();
-    const problems = data.questions || data.problems || [];
-    let idx = 0, score = 0;
-
-    function renderProblem() {
-      if(idx >= problems.length) {
-        onComplete({result:{correct:score,total:problems.length},timeMs:Date.now()-startTime});
-        return;
-      }
-      const p = problems[idx];
-      const question = p.q || p.question;
-      const answer = p.a !== undefined ? p.a : p.answer;
-      container.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:380px;width:100%">
-          <div style="font-family:var(--font-title);font-size:1.6rem;color:var(--gold)">⚡ MATH RACE</div>
-          <div style="font-size:.85rem;color:var(--muted)">${idx+1} / ${problems.length}</div>
-          <div style="font-family:var(--font-title);font-size:3rem;color:#fff;letter-spacing:.1em">${question}</div>
-          <div id="mr-choices" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;width:100%"></div>
-          <div id="mr-feedback" style="font-family:var(--font-title);font-size:1.2rem;min-height:1.5rem"></div>
-        </div>`;
-      const choicesEl = container.querySelector('#mr-choices');
-      (p.choices || []).forEach(ch => {
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-secondary';
-        btn.textContent = ch;
-        btn.style.fontSize='1.4rem';
-        btn.addEventListener('click', ()=>{
-          const correct = ch == answer;
-          if(correct) {
-            score++;
-            btn.style.background='#2ecc71';
-            container.querySelector('#mr-feedback').textContent='✅ Correct!';
-          } else {
-            btn.style.background='#c0392b';
-            container.querySelector('#mr-feedback').textContent=`❌ It was ${answer}`;
-          }
-          if(onProgress) onProgress(Math.floor((score/problems.length)*900));
-          idx++;
-          setTimeout(renderProblem, 600);
-        });
-        choicesEl.appendChild(btn);
-      });
-    }
-    renderProblem();
   },
 
   // ──────────────────────────────────────────────────────────

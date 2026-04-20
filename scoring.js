@@ -8,25 +8,24 @@ const SCORE_META = {
   quickmath:     { resultFields: ['correct','total'],        maxScore: 1000, notes: '8 questions. correct/total*700 + timeBonus(300)' },
   reaction:      { resultFields: ['avgMs'],                  maxScore: 1000, notes: '5 rounds. 100ms avg→967, 3000ms→0' },
   wordscramble:  { resultFields: ['correct','total'],        maxScore: 1000, notes: '6 words. correct/total*700 + timeBonus(300)' },
-  colorseq:      { resultFields: ['level'],                  maxScore: 1000, notes: 'Level*100. 10+ levels = 1000' },
+  colorseq:      { resultFields: ['correct','total'],        maxScore: 1000, notes: 'correct/total*700 + timeBonus(300). Memorize 10 colors in 10s.' },
   trivia:        { resultFields: ['correct','total'],        maxScore: 1000, notes: '8 questions. correct/total*700 + timeBonus(300)' },
   tessellations: { resultFields: ['correct','total'],        maxScore: 1000, notes: 'correct/total*700 + timeBonus(300)' },
   numberhunt:    { resultFields: [],                         maxScore: 1000, notes: 'Time-only. <15s→1000, 37.5s→0' },
   patternmatch:  { resultFields: ['score','total'],          maxScore: 1000, notes: 'score/total*1000' },
   emojisort:     { resultFields: ['correct','total'],        maxScore: 1000, notes: 'correct/total*700 + timeBonus(300)' },
   curling:       { resultFields: ['score'],                  maxScore: 1000, notes: '5 shots, max 10pts each. score*20' },
-  jumprope:      { resultFields: ['hits','misses'],          maxScore: 1000, notes: '20 beats. hits*50. 20 hits = 1000' },
+  jumprope:      { resultFields: ['hits','total','score'],   maxScore: 1000, notes: '10 beats. PERFECT=100, GOOD=70, OK=40, MISS=0. Max 1000.' },
   minesweeper:   { resultFields: ['won','safe'],             maxScore: 1000, notes: '28 safe cells. Won→900+speed. Lost→safe/28*850' },
   tapfrenzy:     { resultFields: ['taps'],                   maxScore: 1000, notes: 'taps*8. 125 taps = 1000' },
   fastfingers:   { resultFields: ['words','errors'],         maxScore: 1000, notes: '5 words. 1000-ms/20-errors*50' },
   gridlock:      { resultFields: ['solved','moves'],         maxScore: 1000, notes: 'Rush Hour. solved: 1000-moves*35+timeBonus' },
   speedsort:     { resultFields: [],                         maxScore: 1000, notes: 'Time-only. <20s→1000, 40s→0' },
   findbomb:      { resultFields: ['found','total'],          maxScore: 1000, notes: '8 rounds. found/total*700 + timeBonus(300)' },
-  mathrace:      { resultFields: ['correct','total'],        maxScore: 1000, notes: '10 questions. correct/total*700 + timeBonus(300)' },
   simonextreme:  { resultFields: ['level'],                  maxScore: 1000, notes: 'level*100. 10+ levels = 1000' },
   tangram:       { resultFields: [],                         maxScore: 1000, notes: 'Time-only. 0ms→1000, 200s→0' },
   colormatch:    { resultFields: ['pairs'],                  maxScore: 1000, notes: '18 pairs total. pairs/18*1000' },
-  tunneldodge:   { resultFields: ['distance'],               maxScore: 1000, notes: 'distance*4. 250 units = 1000' },
+  tunneldodge:   { resultFields: ['taps'],                   maxScore: 1000, notes: '3 rounds × 10s tapping. taps*5. 200 taps = 1000.' },
 };
 
 function calcScore(type, result, ms) {
@@ -50,7 +49,8 @@ function calcScore(type, result, ms) {
       return Math.min(1000, Math.floor((r.correct / r.total) * 700) + timeBonus(300, 300));
 
     case 'colorseq':
-      return Math.min(1000, (r.level || 0) * 100);
+      if (!r.total) return 0;
+      return Math.min(1000, Math.floor((r.correct / r.total) * 700) + timeBonus(300, 300));
 
     case 'trivia':
       if (!r.total) return 0;
@@ -76,7 +76,7 @@ function calcScore(type, result, ms) {
       return Math.min(1000, (r.score || 0) * 20);
 
     case 'jumprope':
-      return Math.min(1000, (r.hits || 0) * 50);
+      return Math.min(1000, r.score || 0);
 
     case 'minesweeper':
       // 6x6 board, 8 mines = 28 safe cells
@@ -102,10 +102,6 @@ function calcScore(type, result, ms) {
       if (!r.total) return 0;
       return Math.min(1000, Math.floor(((r.found || 0) / r.total) * 700) + timeBonus(300, 300));
 
-    case 'mathrace':
-      if (!r.total) return 0;
-      return Math.min(1000, Math.floor((r.correct / r.total) * 700) + timeBonus(300, 300));
-
     case 'simonextreme':
       return Math.min(1000, (r.level || 0) * 100);
 
@@ -117,7 +113,7 @@ function calcScore(type, result, ms) {
       return Math.min(1000, Math.round((r.pairs || 0) / 18 * 1000));
 
     case 'tunneldodge':
-      return Math.min(1000, (r.distance || 0) * 4);
+      return Math.min(1000, (r.taps || 0) * 5);
 
     default:
       return 0;
