@@ -17,7 +17,7 @@ const SCORE_META = {
   curling:       { resultFields: ['score'],                  maxScore: 1000, notes: '5 shots, max 10pts each. score*20' },
   jumprope:      { resultFields: ['hits','total','score'],   maxScore: 1000, notes: '10 beats. PERFECT=100, GOOD=70, OK=40, MISS=0. Max 1000.' },
   minesweeper:   { resultFields: ['won','safe'],             maxScore: 1000, notes: '28 safe cells. Won→900+speed. Lost→safe/28*850' },
-  tapfrenzy:     { resultFields: ['taps'],                   maxScore: 1000, notes: 'taps*8. 125 taps = 1000' },
+  tapfrenzy:     { resultFields: ['taps'],                   maxScore: Infinity, notes: 'Raw taps in 10s. No cap. Most taps wins.' },
   fastfingers:   { resultFields: ['words','errors'],         maxScore: 1000, notes: '5 words. 1000-ms/20-errors*50' },
   gridlock:      { resultFields: ['solved','moves'],         maxScore: 1000, notes: 'Rush Hour. solved: 1000-moves*35+timeBonus' },
   speedsort:     { resultFields: [],                         maxScore: 1000, notes: 'Time-only. <20s→1000, 40s→0' },
@@ -84,7 +84,7 @@ function calcScore(type, result, ms) {
       return Math.min(850, Math.floor((r.safe || 0) / 28 * 850));
 
     case 'tapfrenzy':
-      return Math.min(1000, (r.taps || 0) * 8);
+      return r.taps || 0;
 
     case 'fastfingers':
       // FIX: was 1000-ms/10 with no error penalty

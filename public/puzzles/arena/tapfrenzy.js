@@ -56,7 +56,7 @@ window.Puzzles.tapfrenzy = function(container, data, onComplete, onProgress) {
         countEl.textContent = taps;
         btn.style.transform = 'scale(.93)';
         btn.style.filter = 'brightness(1.35)';
-        if (onProgress) onProgress(Math.min(1000, taps * 8));
+        if (onProgress) onProgress(taps);
         setTimeout(() => { btn.style.transform = 'scale(1)'; btn.style.filter = 'brightness(1)'; }, 70);
     });
 };
