@@ -928,22 +928,18 @@ function applyUser(user) {
 }
 
 function showAuthError(msg) {
-  const el = $('auth-error');
+  const el = $('auth-error') || $('auth-error-reg');
   if (el) { el.textContent = msg; setTimeout(() => { el.textContent = ''; }, 4000); }
 }
 
-// Tab switching
-$('tab-login').addEventListener('click', () => {
-  $('form-login').style.display = 'flex';
-  $('form-register').style.display = 'none';
-  $('tab-login').classList.add('auth-tab-active');
-  $('tab-register').classList.remove('auth-tab-active');
-});
-$('tab-register').addEventListener('click', () => {
+// Switch between login / register
+$('btn-show-register').addEventListener('click', () => {
   $('form-login').style.display = 'none';
   $('form-register').style.display = 'flex';
-  $('tab-register').classList.add('auth-tab-active');
-  $('tab-login').classList.remove('auth-tab-active');
+});
+$('btn-show-login').addEventListener('click', () => {
+  $('form-register').style.display = 'none';
+  $('form-login').style.display = 'flex';
 });
 
 // Enter key on login fields
@@ -979,8 +975,8 @@ $('btn-do-register').addEventListener('click', async () => {
   const name     = $('reg-name').value.trim();
   const email    = $('reg-email').value.trim();
   const password = $('reg-password').value;
-  if (!name || !email || !password) return showAuthError('All fields required.');
-  if (password.length < 6) return showAuthError('Password must be 6+ characters.');
+  if (!name || !email || !password) { $('auth-error-reg').textContent = 'All fields required.'; return; }
+  if (password.length < 6) { $('auth-error-reg').textContent = 'Password must be 6+ characters.'; return; }
   $('btn-do-register').disabled = true;
   try {
     const res = await fetch('/auth/register', {
@@ -996,15 +992,6 @@ $('btn-do-register').addEventListener('click', async () => {
   finally { $('btn-do-register').disabled = false; }
 });
 
-// Guest
-$('btn-guest').addEventListener('click', () => {
-  currentUser = null;
-  const guestWrap = $('guest-name-wrap');
-  if (guestWrap) guestWrap.style.display = 'block';
-  const bar = $('player-identity');
-  if (bar) bar.style.display = 'none';
-  showScreen('screen-landing');
-});
 
 // Logout
 $('btn-logout').addEventListener('click', () => {

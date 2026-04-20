@@ -19,33 +19,26 @@
       <div class="logo-sub">MULTIPLAYER · SOCIAL · DEDUCTION</div>
     </div>
     <div class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab auth-tab-active" id="tab-login">LOGIN</button>
-        <button class="auth-tab" id="tab-register">REGISTER</button>
-      </div>
 
-      <!-- Login -->
+      <!-- Login (default) -->
       <div id="form-login" class="auth-form">
         <input id="auth-email"    class="input-field" type="email"    placeholder="EMAIL"    autocomplete="email"/>
         <input id="auth-password" class="input-field" type="password" placeholder="PASSWORD" autocomplete="current-password"/>
         <button class="btn btn-primary" id="btn-do-login">LOGIN</button>
+        <div id="auth-error" class="error-msg"></div>
+        <button class="auth-switch-btn" id="btn-show-register">Don't have an account? Register</button>
       </div>
 
-      <!-- Register -->
+      <!-- Register (hidden by default) -->
       <div id="form-register" class="auth-form" style="display:none">
-        <input id="reg-name"     class="input-field" type="text"     placeholder="YOUR NAME (shown in game)" maxlength="20"/>
+        <input id="reg-name"     class="input-field" type="text"     placeholder="YOUR NAME" maxlength="20"/>
         <input id="reg-email"    class="input-field" type="email"    placeholder="EMAIL"/>
         <input id="reg-password" class="input-field" type="password" placeholder="PASSWORD (min 6 chars)"/>
         <button class="btn btn-primary" id="btn-do-register">CREATE ACCOUNT</button>
+        <div id="auth-error-reg" class="error-msg"></div>
+        <button class="auth-switch-btn" id="btn-show-login">Already have an account? Login</button>
       </div>
 
-      <div id="auth-error" class="error-msg"></div>
-
-      <div class="guest-divider"><span>OR</span></div>
-      <button class="btn-ghost" id="btn-guest">▷ Play as Guest</button>
-      <div class="guest-notice">
-        ⚠ Guests do not save scores, cannot appear on the high score list, and will not receive a special shirt.
-      </div>
     </div>
   </div>
 </div>

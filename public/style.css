@@ -940,6 +940,13 @@ html, body {
   color: var(--gold); background: rgba(241,196,15,.1);
 }
 .auth-form { display: flex; flex-direction: column; gap: .75rem; }
+.auth-switch-btn {
+  background: transparent; border: none; color: var(--muted); font-family: var(--font-body);
+  font-size: .85rem; cursor: pointer; text-align: center; padding: .25rem;
+  text-decoration: underline; text-underline-offset: 3px;
+  transition: color .15s; touch-action: manipulation;
+}
+.auth-switch-btn:hover { color: var(--text); }
 .btn-ghost {
   background: transparent; border: 1px solid rgba(255,255,255,.12);
   color: var(--muted); font-family: var(--font-body); font-size: .85rem;
