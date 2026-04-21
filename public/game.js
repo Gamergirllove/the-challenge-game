@@ -1003,6 +1003,16 @@ $('btn-logout').addEventListener('click', () => {
 
 // ============================================================
 //  LEADERBOARD
+// Guest
+$('btn-guest').addEventListener('click', () => {
+  currentUser = null;
+  const guestWrap = $('guest-name-wrap');
+  if (guestWrap) guestWrap.style.display = 'block';
+  const bar = $('player-identity');
+  if (bar) bar.style.display = 'none';
+  showScreen('screen-landing');
+});
+
 // ============================================================
 $('btn-leaderboard').addEventListener('click', () => showLeaderboard());
 $('btn-lb-back').addEventListener('click', () => showScreen('screen-landing'));
