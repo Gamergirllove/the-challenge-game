@@ -616,12 +616,15 @@ function endDaily(code) {
   const pl = alive(code);
   pl.forEach(p => { if (!p.finished) p.roundScore = 0; p.totalScore += p.roundScore; });
   const sorted = [...pl].sort((a,b) => b.roundScore - a.roundScore);
-  r.lastPlaceId = sorted[sorted.length-1].id;
+  r.lastPlaceId  = sorted[sorted.length-1].id;
+  r.dailyWinnerId = sorted[0].id;
 
   setPhase(code, PHASE.DAILY_RESULTS, {
-    results: sorted.map((p,i) => ({ id:p.id, name:p.name, roundScore:p.roundScore, totalScore:p.totalScore, rank:i+1, isLast: p.id===r.lastPlaceId })),
+    results: sorted.map((p,i) => ({ id:p.id, name:p.name, roundScore:p.roundScore, totalScore:p.totalScore, rank:i+1, isLast: p.id===r.lastPlaceId, isFirst: p.id===r.dailyWinnerId })),
     lastPlaceId: r.lastPlaceId,
     lastPlaceName: r.players[r.lastPlaceId]?.name,
+    winnerId: r.dailyWinnerId,
+    winnerName: r.players[r.dailyWinnerId]?.name,
   });
   broadcastSpectatorUpdate(code);
   setTimeout(() => { if (rooms[code]?.phase === PHASE.DAILY_RESULTS) startDiscussion(code); }, RESULTS_SEC * 1000);
@@ -642,7 +645,8 @@ function startDiscussion(code) {
 function startVoting(code) {
   const r = rooms[code]; if (!r) return;
   clearTimer(code);
-  const votable = alive(code).filter(p => p.id !== r.lastPlaceId).map(p => ({ id:p.id, name:p.name }));
+  const immune = new Set([r.lastPlaceId, r.dailyWinnerId]);
+  const votable = alive(code).filter(p => !immune.has(p.id)).map(p => ({ id:p.id, name:p.name }));
   setPhase(code, PHASE.VOTING, {
     lastPlaceId: r.lastPlaceId,
     lastPlaceName: r.players[r.lastPlaceId]?.name,

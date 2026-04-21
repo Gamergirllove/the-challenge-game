@@ -587,7 +587,8 @@ html, body {
 .result-name { font-family: var(--font-title); font-size: 1.5rem; flex: 1; letter-spacing: .05em; }
 .result-score { font-family: var(--font-title); font-size: 1.4rem; color: var(--gold); letter-spacing: .05em; }
 .result-tag { font-size: .7rem; letter-spacing: .2em; padding: .15rem .5rem; border-radius: 4px; }
-.tag-arena { background: var(--red);  color: #fff; }
+.tag-arena  { background: var(--red);   color: #fff; }
+.tag-immune { background: var(--green); color: #fff; }
 .tag-you   { background: var(--blue); color: #fff; }
 .results-footer { padding: .75rem 1rem; text-align: center; color: var(--muted); font-size: .9rem; letter-spacing: .15em; background: var(--dark2); border-top: 1px solid rgba(255,255,255,.05); }
 .countdown-inline { color: var(--gold); font-family: var(--font-title); font-size: 1.1rem; }

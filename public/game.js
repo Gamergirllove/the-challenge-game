@@ -287,6 +287,7 @@ function renderDailyResults(data) {
       <div class="result-rank">${rankIcon(i+1)}</div>
       <div class="result-name">${escHtml(p.name)}</div>
       ${p.id === myId ? `<span class="result-tag tag-you">YOU</span>` : ''}
+      ${p.isFirst ? `<span class="result-tag tag-immune">🛡 IMMUNE</span>` : ''}
       ${p.isLast ? `<span class="result-tag tag-arena">ARENA</span>` : ''}
       <div class="result-score">${p.roundScore} pts</div>`;
     list.appendChild(row);
