@@ -5,7 +5,7 @@ const path = require('path');
 const fs   = require('fs');
 const { calcScore } = require('./scoring');
 const User = require('./user');
-const { cpuPlay, pickCPUs, formatQuote, pickQuote } = require('./cpu-data');
+const { CPU_ROSTER, cpuPlay, pickCPUs, formatQuote, pickQuote } = require('./cpu-data');
 
 const app = express();
 const server = http.createServer(app);
@@ -1209,11 +1209,10 @@ io.on('connection', socket => {
   });
 
   // ── Single player: create room + CPUs, start immediately ──
-  socket.on('solo:start', ({ name, difficulty, cpuCount }) => {
+  socket.on('solo:start', ({ name, difficulty, cpuIds }) => {
     if (!name?.trim()) return socket.emit('error', { msg: 'Enter your name' });
     const n = name.trim().slice(0, 20);
     const diff = ['easy','medium','hard'].includes(difficulty) ? difficulty : 'medium';
-    const count = Math.min(9, Math.max(2, parseInt(cpuCount) || 4));
     const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
     const code = createRoom(socket.id, n, wins);
     socket.join(code);
@@ -1226,8 +1225,10 @@ io.on('connection', socket => {
     r.difficulty = diff;
     r.cpuPlayers = {};
 
-    // Add CPU players
-    const cpus = pickCPUs(count);
+    // Add CPU players — use selected IDs if provided, else pick randomly (min 5)
+    const cpus = Array.isArray(cpuIds) && cpuIds.length >= 5
+      ? CPU_ROSTER.filter(c => cpuIds.includes(c.id)).slice(0, 9)
+      : pickCPUs(5);
     cpus.forEach(cpu => {
       const cpuId = 'cpu-' + cpu.id + '-' + Math.random().toString(36).substr(2,5);
       r.players[cpuId] = { id: cpuId, name: `${cpu.emoji} ${cpu.name}`, isHost: false, alive: true, totalScore: 0, roundScore: 0, finished: false, wins: 0, isCPU: true };

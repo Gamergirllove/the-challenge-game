@@ -242,22 +242,25 @@ html, body {
   font-family:var(--font-title); font-size:3.5rem; color:var(--gold); line-height:1;
 }
 .sp-count-label {
-  font-size:.65rem; color:var(--muted); letter-spacing:.2em; margin-top:.15rem;
+  font-family:var(--font-title); font-size:1rem; color:var(--gold); letter-spacing:.2em;
 }
 
 /* Contestant preview grid */
 .sp-contestants-grid {
   display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; width:100%;
 }
+.sp-select-hint { font-size:.8rem; color:var(--muted); letter-spacing:.1em; }
 .sp-contestant-chip {
   display:flex; align-items:center; gap:.4rem;
-  padding:.35rem .75rem; border-radius:20px;
-  font-size:.8rem; font-family:var(--font-body); letter-spacing:.04em;
-  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
-  color:var(--muted); transition:background .2s, border-color .2s, color .2s;
+  padding:.4rem .85rem; border-radius:20px;
+  font-size:.85rem; font-family:var(--font-body); letter-spacing:.04em;
+  background:rgba(255,255,255,.05); border:2px solid rgba(255,255,255,.1);
+  color:var(--muted); cursor:pointer; touch-action:manipulation;
+  transition:background .15s, border-color .15s, color .15s;
 }
+.sp-contestant-chip:hover { border-color:rgba(255,255,255,.25); color:var(--text); }
 .sp-contestant-chip.active {
-  background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.3); color:#fff;
+  background:rgba(46,204,113,.15); border-color:var(--green); color:#fff;
 }
 .sp-contestant-chip .chip-emoji { font-size:1rem; }
 

@@ -79,7 +79,6 @@ function showError(msg) {
 
 // ── Single Player flow ─────────────────────────────────────
 let spDifficulty = 'medium';
-let spCpuCount   = 4;
 
 const SP_ALL = [
   { id:'jimmy-pineapples',    emoji:'🍍', name:'Jimmy Pineapples'    },
@@ -94,6 +93,8 @@ const SP_ALL = [
   { id:'derek-the-bulldog',   emoji:'🐕', name:'Derek the Bulldog'   },
   { id:'scuba-nells',         emoji:'🤿', name:'Scuba Nells'         },
 ];
+
+let selectedCpus = new Set(SP_ALL.slice(0, 5).map(c => c.id));
 
 $('btn-solo').addEventListener('click', () => {
   const name = $('landing-name').value.trim();
@@ -112,32 +113,36 @@ document.querySelectorAll('.sp-diff-card').forEach(btn => {
 });
 $('sp-diff-back').addEventListener('click', () => showScreen('screen-landing'));
 
-// Count selector
 function renderSPChips() {
   const grid = $('sp-contestants-grid');
   if (!grid) return;
   grid.innerHTML = '';
-  SP_ALL.forEach((c, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'sp-contestant-chip' + (i < spCpuCount ? ' active' : '');
+  SP_ALL.forEach(c => {
+    const chip = document.createElement('button');
+    const sel = selectedCpus.has(c.id);
+    chip.className = 'sp-contestant-chip' + (sel ? ' active' : '');
     chip.innerHTML = `<span class="chip-emoji">${c.emoji}</span>${c.name}`;
+    chip.addEventListener('click', () => {
+      if (selectedCpus.has(c.id)) {
+        if (selectedCpus.size <= 5) return;
+        selectedCpus.delete(c.id);
+      } else {
+        if (selectedCpus.size >= 9) return;
+        selectedCpus.add(c.id);
+      }
+      renderSPChips();
+    });
     grid.appendChild(chip);
   });
-  $('sp-count-val').textContent = spCpuCount;
+  $('sp-count-val').textContent = selectedCpus.size;
 }
 
-$('sp-count-minus').addEventListener('click', () => {
-  if (spCpuCount > 2) { spCpuCount--; renderSPChips(); }
-});
-$('sp-count-plus').addEventListener('click', () => {
-  if (spCpuCount < 9) { spCpuCount++; renderSPChips(); }
-});
 $('sp-players-back').addEventListener('click', () => showScreen('screen-sp-difficulty'));
 
 $('sp-start-solo').addEventListener('click', () => {
-  const name = $('landing-name').value.trim();
+  const name = $('landing-name').value.trim() || currentUser?.name;
   if (!name) { showScreen('screen-landing'); return; }
-  socket.emit('solo:start', { name, difficulty: spDifficulty, cpuCount: spCpuCount });
+  socket.emit('solo:start', { name, difficulty: spDifficulty, cpuIds: [...selectedCpus] });
 });
 
 
