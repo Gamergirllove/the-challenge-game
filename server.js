@@ -1090,7 +1090,7 @@ io.on('connection', socket => {
     if (r.phase === PHASE.FINALE && !r.finalePlayers.includes(socket.id)) return;
 
     p.finished = true;
-    const type = r.puzzleType; // works for all phases now
+    const type = (r.phase === PHASE.DAILY) ? r.puzzleType : r.duelType;
     const score = calcScore(type, result || {}, timeMs || 99999);
     p.roundScore = score;
 
