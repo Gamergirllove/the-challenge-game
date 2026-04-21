@@ -77,6 +77,7 @@ app.get('/api/leaderboard', (_req, res) => {
   const db = loadDB();
   const board = Object.entries(db.users)
     .map(([, u]) => ({ name: u.name, wins: u.wins, totalGames: u.totalGames, totalPoints: u.totalPoints || 0 }))
+    .filter(u => u.wins > 0)
     .sort((a, b) => b.wins - a.wins || b.totalPoints - a.totalPoints || b.totalGames - a.totalGames)
     .slice(0, 100);
   res.json(board);
