@@ -6,6 +6,7 @@ const fs   = require('fs');
 const { calcScore } = require('./scoring');
 const User = require('./user');
 const { CPU_ROSTER, cpuPlay, pickCPUs, formatQuote, pickQuote } = require('./cpu-data');
+const { containsProfanity, filterChat } = require('./profanity');
 
 const app = express();
 const server = http.createServer(app);
@@ -45,6 +46,7 @@ app.post('/auth/register', (req, res) => {
   const { name, email, password } = req.body || {};
   if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
   if (password.length < 6) return res.status(400).json({ error: 'Password must be 6+ characters' });
+  if (containsProfanity(name)) return res.status(400).json({ error: 'Name contains prohibited language' });
   const db = loadDB();
   const existing = Object.values(db.users).find(u => u.email === email.toLowerCase().trim());
   if (existing) return res.status(409).json({ error: 'Email already registered' });
@@ -1050,6 +1052,7 @@ io.on('connection', socket => {
   socket.on('room:create', ({ name }) => {
     if (!name?.trim()) return socket.emit('error', { msg: 'Enter your name' });
     const n = name.trim().slice(0, 20);
+    if (containsProfanity(n)) return socket.emit('error', { msg: 'Name contains prohibited language' });
     const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
     const code = createRoom(socket.id, n, wins);
     socket.join(code);
@@ -1067,6 +1070,7 @@ io.on('connection', socket => {
     if (!name?.trim())                       return socket.emit('error', { msg: 'Enter your name.' });
     if (alive(upper).length >= MAX_PLAYERS)  return socket.emit('error', { msg: 'Room is full (10/10).' });
     const n = name.trim().slice(0, 20);
+    if (containsProfanity(n)) return socket.emit('error', { msg: 'Name contains prohibited language' });
     const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
     addPlayer(upper, socket.id, n, false, wins);
     socket.join(upper);
@@ -1168,7 +1172,8 @@ io.on('connection', socket => {
     if (!text?.trim()) return;
     const p = r.players[socket.id] || r.spectators[socket.id];
     if (!p) return;
-    const msg = { id: Date.now()+Math.random(), playerId:socket.id, playerName:p.name, text:text.trim().slice(0,200), ts:Date.now(), isSpec: !!r.spectators[socket.id] };
+    const clean = filterChat(text.trim().slice(0, 200));
+    const msg = { id: Date.now()+Math.random(), playerId:socket.id, playerName:p.name, text:clean, ts:Date.now(), isSpec: !!r.spectators[socket.id] };
     r.chatHistory.push(msg);
     io.to(code).emit('chat:message', msg);
   });
@@ -1217,6 +1222,7 @@ io.on('connection', socket => {
   socket.on('solo:start', ({ name, difficulty, cpuIds }) => {
     if (!name?.trim()) return socket.emit('error', { msg: 'Enter your name' });
     const n = name.trim().slice(0, 20);
+    if (containsProfanity(n)) return socket.emit('error', { msg: 'Name contains prohibited language' });
     const diff = ['easy','medium','hard'].includes(difficulty) ? difficulty : 'medium';
     const wins = socket.data.userId ? (loadDB().users[socket.data.userId]?.wins || 0) : 0;
     const code = createRoom(socket.id, n, wins);
