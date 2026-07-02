@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Game Tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  html, body { overflow: hidden; height: 100%; }
+
+  /* ── Layout ── */
+  #tester-layout {
+    display: flex; height: 100vh; width: 100vw;
+    background: #0a0a0f;
+  }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: 240px; flex-shrink: 0;
+    background: #0d0d18;
+    border-right: 1px solid rgba(255,255,255,.08);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    flex-shrink: 0;
+  }
+  #sidebar-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: .15em;
+    color: #f5c518;
+  }
+  #sidebar-header p {
+    font-size: .75rem; color: #666; margin-top: .2rem;
+    letter-spacing: .08em;
+  }
+  #sidebar-list {
+    flex: 1; overflow-y: auto; padding: .5rem;
+  }
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: .8rem; letter-spacing: .2em;
+    color: #555; padding: .6rem .5rem .3rem;
+  }
+  .game-btn {
+    display: block; width: 100%;
+    padding: .55rem .75rem;
+    border: none; background: transparent;
+    color: #ccc; font-family: 'Barlow Condensed', sans-serif;
+    font-size: .9rem; letter-spacing: .04em;
+    text-align: left; cursor: pointer;
+    border-radius: 6px; margin-bottom: 2px;
+    transition: background .12s, color .12s;
+  }
+  .game-btn:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .game-btn.active { background: rgba(245,197,24,.15); color: #f5c518; border: 1px solid rgba(245,197,24,.3); }
+
+  /* ── Main area ── */
+  #main {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #toolbar {
+    padding: .75rem 1rem;
+    background: #0d0d18;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; gap: 1rem;
+    flex-shrink: 0;
+  }
+  #game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem; letter-spacing: .1em;
+    color: #fff; flex: 1;
+  }
+  #game-category {
+    font-size: .75rem; letter-spacing: .15em;
+    padding: .2rem .6rem; border-radius: 99px;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .cat-daily   { background: rgba(46,204,113,.15); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); }
+  .cat-arena   { background: rgba(232,25,44,.15);  color: #e8192c; border: 1px solid rgba(232,25,44,.3); }
+
+  .tool-btn {
+    padding: .45rem 1rem;
+    border-radius: 6px; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: #ccc; font-family: 'Barlow Condensed', sans-serif;
+    font-size: .9rem; letter-spacing: .06em;
+    cursor: pointer; transition: all .12s;
+  }
+  .tool-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+  .tool-btn.primary { background: #e8192c; border-color: #e8192c; color: #fff; }
+  .tool-btn.primary:hover { background: #ff2035; }
+
+  /* ── Game container ── */
+  #game-wrap {
+    flex: 1; overflow: auto;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 1.5rem;
+  }
+
+  /* Empty state */
+  #empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%; color: #444;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: .1em;
+  }
+  #empty-state .big { font-size: 4rem; margin-bottom: .5rem; }
+  #empty-state .sub { font-size: 1.1rem; color: #333; }
+
+  /* Game stage */
+  #game-stage {
+    display: none;
+    width: 100%; max-width: 700px;
+  }
+
+  /* Result overlay */
+  #result-banner {
+    display: none;
+    width: 100%; max-width: 700px;
+    margin-bottom: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: .08em;
+    font-size: 1.1rem;
+  }
+  #result-banner.win  { background: rgba(46,204,113,.15); border: 1px solid rgba(46,204,113,.4); color: #2ecc71; }
+  #result-banner.lose { background: rgba(232,25,44,.12);  border: 1px solid rgba(232,25,44,.3);  color: #e8192c; }
+  #result-banner .r-score { font-size: 2rem; color: #f5c518; }
+
+  /* Log panel */
+  #log-panel {
+    width: 100%; max-width: 700px;
+    margin-top: 1rem;
+    padding: .75rem 1rem;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: .8rem; color: #555;
+    max-height: 120px; overflow-y: auto;
+    display: none;
+  }
+  .log-line { padding: .15rem 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .log-line:last-child { border: none; }
+  .log-line.good { color: #2ecc71; }
+  .log-line.bad  { color: #e8192c; }
+  .log-line.info { color: #3498db; }
+
+  /* Loading spinner */
+  #loading {
+    display: none;
+    padding: 3rem; text-align: center;
+    color: #555; font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: .15em; font-size: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="tester-layout">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h1>🎮 Game Tester</h1>
+      <p>CLICK A GAME TO TEST IT</p>
+    </div>
+    <div id="sidebar-list">
+      <div class="section-label">📅 DAILY CHALLENGES</div>
+      <button class="game-btn" data-type="memory"       data-cat="daily">🃏 Memory Match</button>
+      <button class="game-btn" data-type="quickmath"    data-cat="daily">🔢 Quick Math</button>
+      <button class="game-btn" data-type="colorseq"     data-cat="daily">🎨 Color Sequence</button>
+      <button class="game-btn" data-type="wordscramble" data-cat="daily">🔤 Word Scramble</button>
+      <button class="game-btn" data-type="tessellations" data-cat="daily">🔷 Tessellations</button>
+      <button class="game-btn" data-type="patternmatch" data-cat="daily">🧩 Pattern Match</button>
+      <button class="game-btn" data-type="emojisort"    data-cat="daily">🗂 Emoji Sort</button>
+      <button class="game-btn" data-type="curling"      data-cat="daily">🥌 Curling</button>
+      <button class="game-btn" data-type="jumprope"     data-cat="daily">🪢 Jump Rope</button>
+      <button class="game-btn" data-type="minesweeper"  data-cat="daily">💣 Minesweeper</button>
+      <button class="game-btn" data-type="tangram"      data-cat="daily">🧩 Tangram</button>
+      <button class="game-btn" data-type="colormatch"   data-cat="daily">🎨 Color Match</button>
+      <button class="game-btn" data-type="flagfrenzy"   data-cat="daily">🚩 Flag Frenzy</button>
+      <button class="game-btn" data-type="memorygrid"   data-cat="daily">🧠 Memory Grid</button>
+      <button class="game-btn" data-type="infernodash"  data-cat="daily">🔥 Inferno Dash</button>
+
+      <div class="section-label" style="margin-top:.5rem">⚔️ ARENA / ELIMINATION</div>
+      <button class="game-btn" data-type="trivia"       data-cat="arena">❓ Trivia Showdown</button>
+      <button class="game-btn" data-type="reaction"     data-cat="arena">⚡ Reaction Test</button>
+      <button class="game-btn" data-type="numberhunt"   data-cat="arena">🎯 Number Hunt</button>
+      <button class="game-btn" data-type="tapfrenzy"    data-cat="arena">👆 Tap Frenzy</button>
+      <button class="game-btn" data-type="fastfingers"  data-cat="arena">⌨ Fast Fingers</button>
+      <button class="game-btn" data-type="gridlock"     data-cat="arena">🚗 Rush Hour</button>
+      <button class="game-btn" data-type="speedsort"    data-cat="arena">⬆ Speed Sort</button>
+      <button class="game-btn" data-type="findbomb"     data-cat="arena">💣 Find the Bomb</button>
+      <button class="game-btn" data-type="simonextreme" data-cat="arena">🔴 Simon Extreme</button>
+      <button class="game-btn" data-type="tunneldodge"  data-cat="arena">🚀 Tunnel Dodge</button>
+      <button class="game-btn" data-type="hallbrawl"    data-cat="arena">👊 Hall Brawl</button>
+      <button class="game-btn" data-type="wreckingwall" data-cat="arena">🧱 Wrecking Wall</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="toolbar">
+      <span id="game-title">Select a game →</span>
+      <span id="game-category" style="display:none"></span>
+      <button class="tool-btn" id="btn-replay" style="display:none" onclick="replayGame()">↺ Replay</button>
+      <button class="tool-btn" id="btn-log"    style="display:none" onclick="toggleLog()">📋 Log</button>
+    </div>
+
+    <div id="game-wrap">
+      <div id="empty-state">
+        <div class="big">🎮</div>
+        <div class="sub">PICK A GAME FROM THE LEFT</div>
+      </div>
+      <div id="loading">LOADING GAME…</div>
+      <div id="result-banner"></div>
+      <div id="game-stage"></div>
+      <div id="log-panel"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA BANKS (mirrors server.js)
+// ============================================================
+const EMOJI_SET = ['🔥','⚡','💎','🏆','🎯','💣','🌊','🎲','👑','🦁','🐺','🦊','🐍','🦅','🌟','💰','🎭','⚔️','🏅','🎪'];
+const COLORS    = ['red','blue','green','yellow'];
+const COLOR_HEX = { red:'#e74c3c', blue:'#3498db', green:'#2ecc71', yellow:'#f1c40f' };
+
+const MATH_BANK = [
+  {q:'7 × 8',     a:56,  w:[48,54,63]},
+  {q:'144 ÷ 12',  a:12,  w:[11,13,14]},
+  {q:'15 + 28',   a:43,  w:[41,44,45]},
+  {q:'92 − 37',   a:55,  w:[54,56,65]},
+  {q:'6 × 9',     a:54,  w:[48,56,63]},
+  {q:'√64',       a:8,   w:[6,7,9]},
+  {q:'17 × 3',    a:51,  w:[48,52,54]},
+  {q:'100 ÷ 4',   a:25,  w:[20,24,26]},
+  {q:'13²',       a:169, w:[156,163,172]},
+  {q:'48 + 37',   a:85,  w:[83,84,86]},
+  {q:'9 × 7',     a:63,  w:[54,62,72]},
+  {q:'200 − 143', a:57,  w:[55,58,67]},
+  {q:'8 × 8',     a:64,  w:[56,63,72]},
+  {q:'121 ÷ 11',  a:11,  w:[9,10,12]},
+  {q:'45 + 56',   a:101, w:[99,100,102]},
+  {q:'14 × 6',    a:84,  w:[78,80,90]},
+  {q:'256 ÷ 16',  a:16,  w:[14,15,18]},
+  {q:'√144',      a:12,  w:[10,11,13]},
+];
+
+const WORD_BANK = [
+  {word:'CHALLENGE', hint:'Social competition'},
+  {word:'ALLIANCE',  hint:'Team pact'},
+  {word:'STRATEGY',  hint:'Game plan'},
+  {word:'BETRAYAL',  hint:'Backstab'},
+  {word:'CHAMPION',  hint:'Winner'},
+  {word:'ENDURANCE', hint:'Keep going'},
+  {word:'ELIMINATE', hint:'Vote off'},
+  {word:'VICTORY',   hint:'Winning'},
+  {word:'COMPETE',   hint:'Go against'},
+  {word:'REVENGE',   hint:'Get back'},
+  {word:'SURVIVE',   hint:'Stay alive'},
+  {word:'MISSION',   hint:'The task'},
+  {word:'DOMINATE',  hint:'Win big'},
+  {word:'VETERAN',   hint:'Experienced player'},
+  {word:'ROOKIE',    hint:'Newcomer'},
+];
+
+const TRIVIA_BANK = [
+  {q:'Social deduction games are also called?',       a:'Mafia-style games',        w:['Strategy games','Word games','Card games']},
+  {q:'In Battle Royale games, how many players win?', a:'1',                        w:['2','3','5']},
+  {q:'Which skill is most key in social games?',      a:'Persuasion',               w:['Speed','Memory','Math']},
+  {q:'A player who hides their true role is called?', a:'A wolf in sheep clothing', w:['A rookie','A veteran','A champion']},
+  {q:'What does "throwing the comp" mean?',           a:'Losing on purpose',        w:['Winning too fast','Quitting','Voting yourself']},
+  {q:'An "alliance" in a game is?',                   a:'A secret agreement',       w:['A scoring bonus','A penalty','A tiebreaker']},
+  {q:'"Social capital" in a game means?',             a:'Trust and relationships',  w:['Total points','Win streak','Vote count']},
+  {q:'First player targeted is often called?',        a:'The weakest link',         w:['The hero','The anchor','The shield']},
+  {q:'A "blindside" in a game means?',                a:'Surprise elimination',     w:['Bonus round','Free pass','Power vote']},
+  {q:'What is a "comp beast"?',                       a:'A challenge-winning player',w:['Loudest player','Sneakiest player','Luckiest player']},
+];
+
+const TESS_PALETTES = [
+  ['#e74c3c','#3498db'],['#f39c12','#2ecc71'],['#9b59b6','#e67e22'],
+  ['#1abc9c','#e74c3c'],['#3498db','#f1c40f','#e74c3c'],
+];
+
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+}
+
+function scrambleWord(word) {
+  const letters = word.split('');
+  let scrambled;
+  let tries = 0;
+  do { scrambled = shuffle(letters).join(''); tries++; } while (scrambled === word && tries < 10);
+  return scrambled;
+}
+
+// ============================================================
+// makePuzzle — mirrors server.js
+// ============================================================
+function makePuzzle(type) {
+  switch (type) {
+    case 'memory': {
+      const pairs = shuffle(EMOJI_SET).slice(0, 6);
+      const cards = shuffle([...pairs, ...pairs]).map((e, i) => ({ id: i, emoji: e }));
+      return { type, cards, pairs: 6 };
+    }
+    case 'quickmath': {
+      const qs = shuffle(MATH_BANK).slice(0, 8).map(q => ({
+        q: q.q, a: q.a, choices: shuffle([q.a, ...q.w])
+      }));
+      return { type, questions: qs };
+    }
+    case 'reaction': {
+      const delays = Array.from({length:5}, () => Math.floor(Math.random()*3000)+1500);
+      return { type, rounds: 5, delays };
+    }
+    case 'wordscramble': {
+      const words = shuffle(WORD_BANK).slice(0, 6).map(w => ({
+        word: w.word, hint: w.hint, scrambled: scrambleWord(w.word)
+      }));
+      return { type, words };
+    }
+    case 'colorseq': {
+      const seq = Array.from({length:10}, () => COLORS[Math.floor(Math.random()*COLORS.length)]);
+      return { type, sequence: seq, colors: COLORS, colorHex: COLOR_HEX };
+    }
+    case 'trivia': {
+      const qs = shuffle(TRIVIA_BANK).slice(0, 8).map(q => ({
+        q: q.q, a: q.a, choices: shuffle([q.a, ...q.w])
+      }));
+      return { type, questions: qs };
+    }
+    case 'tessellations': {
+      const patternTypes = ['checker','diagonal','cross','stripes'];
+      const pt = patternTypes[Math.floor(Math.random() * patternTypes.length)];
+      const palette = shuffle(TESS_PALETTES)[0];
+      const numColors = pt==='checker'?2: pt==='diagonal'?3: pt==='cross'?4: 3;
+      const colors = palette.slice(0, Math.min(numColors, palette.length));
+      const size = 5;
+      const grid = [];
+      for (let r = 0; r < size; r++) {
+        const row = [];
+        for (let c = 0; c < size; c++) {
+          let idx;
+          if      (pt==='checker')   idx = (r+c)%2;
+          else if (pt==='diagonal')  idx = (r+c)%3;
+          else if (pt==='cross')     idx = (r%2)*2 + (c%2);
+          else                       idx = r%3;
+          row.push(idx % colors.length);
+        }
+        grid.push(row);
+      }
+      const allCells = [];
+      for (let r=0; r<size; r++) for (let c=0; c<size; c++) allCells.push([r,c]);
+      const hidden = shuffle(allCells).slice(0, 9);
+      return { type, grid, hidden, colors, size };
+    }
+    case 'numberhunt': {
+      const nums = shuffle(Array.from({length:16},(_,i)=>i+1));
+      return { type, nums };
+    }
+    case 'patternmatch': {
+      const patColors = ['#e74c3c','#3498db','#2ecc71','#9b59b6','#f39c12'];
+      const sizes = [3, 4];
+      const rounds = Array.from({length:5}, () => {
+        const sz = sizes[Math.floor(Math.random()*sizes.length)];
+        const density = 0.35 + Math.random()*0.25;
+        const pattern = Array.from({length:sz*sz}, ()=>Math.random()<density);
+        const color = patColors[Math.floor(Math.random()*patColors.length)];
+        return { size:sz, pattern, color };
+      });
+      return { type, rounds };
+    }
+    case 'emojisort': {
+      const categories = [
+        { name:'Animals',  emoji:'🐾', items:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨'] },
+        { name:'Food',     emoji:'🍽', items:['🍎','🍕','🍔','🌮','🍜','🍣','🍰','🍪','🍩','🥗'] },
+        { name:'Sports',   emoji:'🏅', items:['⚽','🏀','🎾','⚾','🏈','🎱','🏊','🚴','🥊','🏋️'] },
+        { name:'Nature',   emoji:'🌿', items:['🌺','🌸','🍀','🌵','🌲','🍄','🌈','⭐','🌙','☀️'] },
+      ];
+      const chosen = shuffle(categories).slice(0, 2);
+      const items = [];
+      chosen.forEach(cat => {
+        shuffle(cat.items).slice(0, 5).forEach(emoji => items.push({ emoji, category: cat.name }));
+      });
+      return { type, items: shuffle(items), categories: chosen.map(c=>({name:c.name,emoji:c.emoji})) };
+    }
+    case 'curling':     return { type, shots: 5 };
+    case 'jumprope':    return { type, period: 950, beats: 10 };
+    case 'minesweeper': {
+      const W=6, H=6, mines=8;
+      const cells = Array.from({length:W*H},()=>({mine:false,revealed:false,count:0}));
+      const pos = shuffle([...Array(W*H).keys()]).slice(0,mines);
+      pos.forEach(i=>cells[i].mine=true);
+      cells.forEach((c,i)=>{
+        if(c.mine) return;
+        const row=Math.floor(i/W), col=i%W;
+        let count=0;
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=row+dr,nc=col+dc;
+          if(nr>=0&&nr<H&&nc>=0&&nc<W) if(cells[nr*W+nc].mine) count++;
+        }
+        c.count=count;
+      });
+      return { type, W, H, cells: cells.map(c=>({mine:c.mine,count:c.count})), mines };
+    }
+    case 'tapfrenzy':   return { type, isArena: true };
+    case 'fastfingers': {
+      const wordLists = [
+        ['FIRE','WAVE','JUMP','BOLD','CLAN'],
+        ['ARENA','VOTED','POWER','ELITE','CHASE'],
+        ['RIVAL','CROWN','BRAVE','SURGE','BLAZE'],
+      ];
+      return { type, words: shuffle(wordLists)[0] };
+    }
+    case 'gridlock': {
+      const PUZZLES = [
+        { cars: [
+          {id:0,row:2,col:1,len:2,h:true, target:true },
+          {id:1,row:0,col:3,len:3,h:false,target:false},
+          {id:2,row:3,col:0,len:2,h:true, target:false},
+          {id:3,row:4,col:4,len:2,h:false,target:false},
+        ]},
+        { cars: [
+          {id:0,row:2,col:1,len:2,h:true, target:true },
+          {id:1,row:1,col:3,len:3,h:false,target:false},
+          {id:2,row:4,col:2,len:3,h:true, target:false},
+          {id:3,row:0,col:4,len:2,h:true, target:false},
+          {id:4,row:1,col:0,len:2,h:false,target:false},
+        ]},
+        { cars: [
+          {id:0,row:2,col:0,len:2,h:true, target:true },
+          {id:1,row:0,col:2,len:3,h:false,target:false},
+          {id:2,row:2,col:3,len:2,h:false,target:false},
+          {id:3,row:5,col:1,len:2,h:true, target:false},
+          {id:4,row:0,col:3,len:2,h:true, target:false},
+          {id:5,row:4,col:0,len:2,h:false,target:false},
+        ]},
+      ];
+      const p = PUZZLES[Math.floor(Math.random()*PUZZLES.length)];
+      return { type, cars: p.cars, gridSize: 6, exitRow: 2 };
+    }
+    case 'speedsort': {
+      const items = shuffle(Array.from({length:16},(_,i)=>i+1));
+      return { type, items };
+    }
+    case 'findbomb': {
+      const rounds_data = Array.from({length:8}, () => {
+        const size = 4;
+        const bombPos = Math.floor(Math.random()*size*size);
+        const grid = Array.from({length:size*size},(_,i)=>
+          i===bombPos?'💣': ['😊','🌟','🎈','🎭','🦊','🌺','⚡','🎯'][Math.floor(Math.random()*8)]
+        );
+        return { grid: shuffle(grid.map(e=>({emoji:e,isBomb:e==='💣'}))), size, hint:`The bomb is in Row ${Math.floor(bombPos/size)+1}` };
+      });
+      return { type, rounds_data };
+    }
+    case 'simonextreme': {
+      const seq = Array.from({length:10}, ()=>COLORS[Math.floor(Math.random()*COLORS.length)]);
+      return { type, sequence:seq, colors:COLORS, colorHex:COLOR_HEX, speed:'fast' };
+    }
+    case 'tangram':   return { type, puzzle: Math.floor(Math.random()*4) };
+    case 'colormatch': {
+      const palette = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
+      const grid = [];
+      palette.forEach((_,ci) => { for(let i=0;i<6;i++) grid.push(ci); });
+      return { type, duration:60000, palette, grid:shuffle(grid) };
+    }
+    case 'tunneldodge': return { type, duration:45000, seed:Math.floor(Math.random()*99999) };
+    case 'flagfrenzy':  return { type, duration:30000 };
+    case 'memorygrid': {
+      const mgColors = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6'];
+      const mgGrid = [];
+      for (let c=0;c<5;c++) for (let i=0;i<3;i++) mgGrid.push(c);
+      mgGrid.push(Math.floor(Math.random()*5));
+      return { type, grid:shuffle(mgGrid), colors:mgColors, showTime:6000 };
+    }
+    case 'infernodash':  return { type, duration:30000, seed:Math.floor(Math.random()*99999) };
+    case 'hallbrawl':    return { type, rounds:3, duration:20000 };
+    case 'wreckingwall': return { type, wallHp:60, duration:30000 };
+    default: return { type };
+  }
+}
+
+// ============================================================
+// Tester state
+// ============================================================
+const CATEGORY_PATH = {
+  memory:'daily',quickmath:'daily',colorseq:'daily',wordscramble:'daily',
+  tessellations:'daily',patternmatch:'daily',emojisort:'daily',curling:'daily',
+  jumprope:'daily',minesweeper:'daily',tangram:'daily',colormatch:'daily',
+  flagfrenzy:'daily',memorygrid:'daily',infernodash:'daily',
+  trivia:'arena',reaction:'arena',numberhunt:'arena',tapfrenzy:'arena',
+  fastfingers:'arena',gridlock:'arena',speedsort:'arena',findbomb:'arena',
+  simonextreme:'arena',tunneldodge:'arena',hallbrawl:'arena',wreckingwall:'arena',
+};
+
+const GAME_NAMES = {
+  memory:'🃏 Memory Match',quickmath:'🔢 Quick Math',colorseq:'🎨 Color Sequence',
+  wordscramble:'🔤 Word Scramble',tessellations:'🔷 Tessellations',patternmatch:'🧩 Pattern Match',
+  emojisort:'🗂 Emoji Sort',curling:'🥌 Curling',jumprope:'🪢 Jump Rope',
+  minesweeper:'💣 Minesweeper',tangram:'🧩 Tangram',colormatch:'🎨 Color Match',
+  flagfrenzy:'🚩 Flag Frenzy',memorygrid:'🧠 Memory Grid',infernodash:'🔥 Inferno Dash',
+  trivia:'❓ Trivia Showdown',reaction:'⚡ Reaction Test',numberhunt:'🎯 Number Hunt',
+  tapfrenzy:'👆 Tap Frenzy',fastfingers:'⌨ Fast Fingers',gridlock:'🚗 Rush Hour',
+  speedsort:'⬆ Speed Sort',findbomb:'💣 Find the Bomb',simonextreme:'🔴 Simon Extreme',
+  tunneldodge:'🚀 Tunnel Dodge',hallbrawl:'👊 Hall Brawl',wreckingwall:'🧱 Wrecking Wall',
+};
+
+let currentType = null;
+let loadedScripts = {};
+let logVisible = false;
+const logLines = [];
+
+function log(msg, cls='') {
+  logLines.push({ msg, cls });
+  if (logLines.length > 50) logLines.shift();
+  renderLog();
+}
+
+function renderLog() {
+  const panel = document.getElementById('log-panel');
+  panel.innerHTML = logLines.map(l =>
+    `<div class="log-line ${l.cls}">${l.msg}</div>`
+  ).join('');
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function toggleLog() {
+  logVisible = !logVisible;
+  document.getElementById('log-panel').style.display = logVisible ? 'block' : 'none';
+  document.getElementById('btn-log').textContent = logVisible ? '📋 Hide Log' : '📋 Log';
+}
+
+// ── Load a puzzle JS file once ──
+function loadScript(type) {
+  return new Promise((resolve, reject) => {
+    if (loadedScripts[type]) { resolve(); return; }
+    const cat = CATEGORY_PATH[type] || 'daily';
+    const s = document.createElement('script');
+    s.src = `puzzles/${cat}/${type}.js?v=${Date.now()}`;
+    s.onload = () => { loadedScripts[type] = true; resolve(); };
+    s.onerror = () => reject(new Error(`Failed to load puzzles/${cat}/${type}.js`));
+    document.head.appendChild(s);
+  });
+}
+
+// ── Launch a game ──
+async function launchGame(type) {
+  currentType = type;
+
+  // UI updates
+  document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.game-btn[data-type="${type}"]`)?.classList.add('active');
+
+  const cat = CATEGORY_PATH[type] || 'daily';
+  document.getElementById('game-title').textContent = GAME_NAMES[type] || type;
+  const catEl = document.getElementById('game-category');
+  catEl.style.display = '';
+  catEl.className = 'game-category cat-' + cat;
+  catEl.textContent = cat === 'daily' ? 'DAILY' : 'ARENA';
+
+  document.getElementById('empty-state').style.display   = 'none';
+  document.getElementById('result-banner').style.display = 'none';
+  document.getElementById('game-stage').style.display    = 'none';
+  document.getElementById('loading').style.display       = 'block';
+  document.getElementById('btn-replay').style.display    = '';
+  document.getElementById('btn-log').style.display       = '';
+  if (logVisible) document.getElementById('log-panel').style.display = 'block';
+
+  log(`▶ Loading ${GAME_NAMES[type]}…`, 'info');
+
+  try {
+    await loadScript(type);
+    log(`✓ Script loaded`, 'good');
+  } catch(e) {
+    log(`✗ ${e.message}`, 'bad');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('game-stage').style.display = 'block';
+    document.getElementById('game-stage').innerHTML = `<div style="color:#e8192c;font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;font-size:1.2rem;padding:2rem">⚠ SCRIPT NOT FOUND<br><span style="font-size:.8rem;color:#666">${e.message}</span></div>`;
+    return;
+  }
+
+  if (!window.Puzzles || !window.Puzzles[type]) {
+    log(`✗ window.Puzzles.${type} not defined`, 'bad');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('game-stage').innerHTML = `<div style="color:#e8192c;font-family:'Bebas Neue',sans-serif;padding:2rem">⚠ window.Puzzles.${type} not found</div>`;
+    document.getElementById('game-stage').style.display = 'block';
+    return;
+  }
+
+  const data = makePuzzle(type);
+  log(`✓ Puzzle data: ${JSON.stringify(data).substring(0,80)}…`);
+
+  document.getElementById('loading').style.display = 'none';
+  const stage = document.getElementById('game-stage');
+  stage.style.display = 'block';
+  stage.innerHTML = '';
+
+  let started = Date.now();
+
+  try {
+    window.Puzzles[type](
+      stage,
+      data,
+      // onComplete(score, timeMs)
+      (score, timeMs) => {
+        const elapsed = timeMs !== undefined ? timeMs : (Date.now() - started);
+        log(`✓ onComplete — score: ${score}, time: ${(elapsed/1000).toFixed(2)}s`, 'good');
+        showResult(score, elapsed);
+      },
+      // onProgress(score)
+      (score) => {
+        log(`↑ onProgress — score: ${score}`);
+      }
+    );
+    log(`✓ Game rendered`, 'good');
+  } catch(e) {
+    log(`✗ Runtime error: ${e.message}`, 'bad');
+    console.error(e);
+    stage.innerHTML = `<div style="color:#e8192c;font-family:'Bebas Neue',sans-serif;padding:2rem;white-space:pre-wrap">⚠ RUNTIME ERROR:\n${e.message}\n\n${e.stack}</div>`;
+  }
+}
+
+function showResult(score, timeMs) {
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner ' + (score > 0 ? 'win' : 'lose');
+  banner.style.display = 'block';
+  banner.innerHTML = score > 0
+    ? `✅ COMPLETE &nbsp;|&nbsp; <span class="r-score">${score} pts</span> &nbsp;|&nbsp; ${(timeMs/1000).toFixed(1)}s`
+    : `❌ GAME OVER &nbsp;|&nbsp; <span class="r-score">0 pts</span>`;
+  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function replayGame() {
+  if (currentType) launchGame(currentType);
+}
+
+// ── Wire up sidebar buttons ──
+document.querySelectorAll('.game-btn').forEach(btn => {
+  btn.addEventListener('click', () => launchGame(btn.dataset.type));
+});
+</script>
+</body>
+</html>
