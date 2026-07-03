@@ -651,7 +651,8 @@ async function launchGame(type) {
 
 // Convert game result objects → numeric score for the tester banner
 function extractScore(type, r) {
-  if (!r) return 1;
+  if (!r) return 1000;
+  // Direct score field
   if (typeof r.score   === 'number') return r.score;
-  if (typeof r.correct === 'number' && typeof r.total === 'number' && r.total > 0)
-    return Math.round((r.correct / r.tot
+  // Ratio patterns (correct+total / hits+total / found+total)
+  if (typeof r.correct === 'numbe
