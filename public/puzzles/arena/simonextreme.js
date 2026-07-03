@@ -5,9 +5,11 @@ window.Puzzles.simonextreme = function(container, data, onComplete, onProgress) 
     const { sequence } = data;
     const colorHex = data.colorHex || {RED:'#e74c3c',BLUE:'#3498db',GREEN:'#2ecc71',YELLOW:'#f1c40f',PURPLE:'#9b59b6'};
     const colorEmoji = {RED:'🔴',BLUE:'🔵',GREEN:'🟢',YELLOW:'🟡',PURPLE:'🟣',
-                        R:'🔴',G:'🟢',B:'🔵',Y:'🟡',P:'🟣',O:'🟠'};
+                        R:'🔴',G:'🟢',B:'🔵',Y:'🟡',P:'🟣',O:'🟠',
+                        red:'🔴',blue:'🔵',green:'🟢',yellow:'🟡',purple:'🟣'};
     const colorLit = {RED:'#ff8888',BLUE:'#88aaff',GREEN:'#88ff88',YELLOW:'#ffff88',PURPLE:'#dd88ff',
-                      R:'#ff6b6b',G:'#55ff99',B:'#5dade2',Y:'#ffee55',P:'#c39bd3',O:'#ff9f4a'};
+                      R:'#ff6b6b',G:'#55ff99',B:'#5dade2',Y:'#ffee55',P:'#c39bd3',O:'#ff9f4a',
+                      red:'#ff8888',blue:'#88aaff',green:'#88ff88',yellow:'#ffff88',purple:'#dd88ff'};
     const colorNames = data.colors || Object.keys(colorHex);
     const COLORS = colorNames.map(name => ({
       id: name,
@@ -74,10 +76,4 @@ window.Puzzles.simonextreme = function(container, data, onComplete, onProgress) 
         if(i > step) { clearInterval(interval); showing=false; container.querySelector('#se-msg').textContent='Your turn!'; return; }
         const color = COLORS.find(c=>c.id===sequence[i]);
         const btn = container.querySelector(`#se-${sequence[i]}`);
-        if(btn) { btn.style.background=color.lit; setTimeout(()=>{ if(btn) btn.style.background=color.bg; }, 350); }
-        i++;
-      }, 600);
-    }
-
-    setTimeout(()=>playSequence(), 500);
-};
+     

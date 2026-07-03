@@ -622,15 +622,23 @@ async function launchGame(type) {
     window.Puzzles[type](
       stage,
       data,
-      // onComplete(score, timeMs)
-      (score, timeMs) => {
-        const elapsed = timeMs !== undefined ? timeMs : (Date.now() - started);
+      // onComplete — games pass { result:{...}, timeMs:X } as one object
+      (resultOrScore, maybeTimeMs) => {
+        let score, elapsed;
+        if (resultOrScore !== null && typeof resultOrScore === 'object'
+            && ('result' in resultOrScore || 'timeMs' in resultOrScore)) {
+          elapsed = resultOrScore.timeMs ?? (Date.now() - started);
+          score   = extractScore(type, resultOrScore.result || {});
+        } else {
+          score   = typeof resultOrScore === 'number' ? resultOrScore : 1;
+          elapsed = maybeTimeMs !== undefined ? maybeTimeMs : (Date.now() - started);
+        }
         log(`✓ onComplete — score: ${score}, time: ${(elapsed/1000).toFixed(2)}s`, 'good');
         showResult(score, elapsed);
       },
-      // onProgress(score)
-      (score) => {
-        log(`↑ onProgress — score: ${score}`);
+      // onProgress(pts)
+      (pts) => {
+        log(`↑ onProgress — ${pts}`);
       }
     );
     log(`✓ Game rendered`, 'good');
@@ -641,24 +649,9 @@ async function launchGame(type) {
   }
 }
 
-function showResult(score, timeMs) {
-  const banner = document.getElementById('result-banner');
-  banner.className = 'result-banner ' + (score > 0 ? 'win' : 'lose');
-  banner.style.display = 'block';
-  banner.innerHTML = score > 0
-    ? `✅ COMPLETE &nbsp;|&nbsp; <span class="r-score">${score} pts</span> &nbsp;|&nbsp; ${(timeMs/1000).toFixed(1)}s`
-    : `❌ GAME OVER &nbsp;|&nbsp; <span class="r-score">0 pts</span>`;
-  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function replayGame() {
-  if (currentType) launchGame(currentType);
-}
-
-// ── Wire up sidebar buttons ──
-document.querySelectorAll('.game-btn').forEach(btn => {
-  btn.addEventListener('click', () => launchGame(btn.dataset.type));
-});
-</script>
-</body>
-</html>
+// Convert game result objects → numeric score for the tester banner
+function extractScore(type, r) {
+  if (!r) return 1;
+  if (typeof r.score   === 'number') return r.score;
+  if (typeof r.correct === 'number' && typeof r.total === 'number' && r.total > 0)
+    return Math.round((r.correct / r.tot
